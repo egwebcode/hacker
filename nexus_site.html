@@ -1,0 +1,564 @@
+<!-- FILE: nexus_manager.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS | Gemini 3 Pro Engine</title>
+    
+    <!-- LIBRARIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark-reasonable.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- GOOGLE FONTS -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- TAILWIND CONFIG -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nexus: {
+                            bg: '#030304',
+                            sidebar: '#08080a',
+                            border: '#1a1a1e',
+                            primary: '#6366f1', // Indigo Neon
+                            primaryHover: '#4f46e5',
+                            text: '#e2e8f0',
+                            success: '#10b981',
+                            warning: '#f59e0b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(99, 102, 241, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #030304; color: #e2e8f0; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #08080a; }
+        ::-webkit-scrollbar-thumb { background: #2d2d35; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+        /* Syntax Highlighting Overrides */
+        pre { margin: 0 !important; padding: 1.25rem !important; overflow-x: auto; background: #0c0c0e !important; }
+        code { font-family: 'JetBrains Mono', monospace !important; font-size: 0.85rem; line-height: 1.5; }
+        .hljs { background: transparent !important; padding: 0 !important; }
+
+        /* Animation */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-anim { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Loader */
+        .ai-thinking span {
+            display: inline-block; width: 4px; height: 4px; background-color: #6366f1; border-radius: 50%;
+            animation: pulse 1.4s infinite ease-in-out both; margin: 0 2px;
+        }
+        .ai-thinking span:nth-child(1) { animation-delay: -0.32s; }
+        .ai-thinking span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes pulse { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-nexus-text selection:bg-nexus-primary selection:text-white">
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 backdrop-blur-md">
+        <div class="bg-nexus-sidebar border border-nexus-border p-8 rounded-2xl w-[450px] max-w-[90%] shadow-2xl relative overflow-hidden">
+            <!-- Glow Effect -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-nexus-primary to-transparent"></div>
+            
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 text-white">
+                <i class="fa-solid fa-microchip text-nexus-primary"></i> Configuração do Núcleo
+            </h2>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Hugging Face Token (Write)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key absolute left-3 top-3 text-gray-600 text-xs"></i>
+                        <input type="password" id="hf-key" placeholder="hf_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-[#030304] border border-nexus-border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:border-nexus-primary focus:ring-1 focus:ring-nexus-primary focus:outline-none transition-all text-white placeholder-gray-700">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Modelo de IA</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-brain absolute left-3 top-3 text-gray-600 text-xs"></i>
+                        <input type="text" id="hf-model" value="Qwen/Qwen2.5-72B-Instruct" class="w-full bg-[#030304] border border-nexus-border rounded-lg pl-9 pr-3 py-2.5 text-sm focus:border-nexus-primary focus:ring-1 focus:ring-nexus-primary focus:outline-none transition-all text-white">
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-1">Recomendado: Qwen2.5-72B ou Mistral-Large</p>
+                </div>
+
+                <button onclick="saveSettings()" class="w-full bg-nexus-primary hover:bg-nexus-primaryHover text-white font-bold py-3 rounded-lg transition-all shadow-glow flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-power-off"></i> INICIALIZAR SISTEMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="h-16 border-b border-nexus-border bg-nexus-sidebar/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
+                <i class="fa-brands fa-unity"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-white leading-tight tracking-tight">NEXUS <span class="text-nexus-primary">DEV</span></h1>
+                <div class="flex items-center gap-2">
+                    <div id="status-indicator" class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <span id="status-text" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Desconectado</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- ZIP BUTTON -->
+            <button onclick="downloadAllZip()" id="zip-btn" class="hidden group relative bg-[#0f0f11] hover:bg-[#1a1a1e] border border-nexus-border text-nexus-text px-4 py-2 rounded-lg text-xs font-bold transition-all items-center gap-2 hover:border-nexus-success/50 hover:text-nexus-success">
+                <div class="absolute inset-0 bg-nexus-success/5 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+                <i class="fa-solid fa-file-zipper"></i>
+                <span>BAIXAR PACOTE (<span id="file-count">0</span>)</span>
+            </button>
+
+            <button onclick="toggleSettings()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CHAT -->
+    <main id="chat-stream" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth pb-40">
+        <!-- Welcome Screen -->
+        <div id="welcome" class="h-full flex flex-col items-center justify-center text-center opacity-100 animate-fade-in">
+            <div class="w-24 h-24 rounded-3xl bg-nexus-border/30 border border-nexus-border flex items-center justify-center mb-6 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-tr from-nexus-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <i class="fa-solid fa-code-branch text-5xl text-gray-700 group-hover:text-nexus-primary transition-colors duration-300"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-3">O que vamos construir?</h2>
+            <p class="text-sm text-gray-500 max-w-md leading-relaxed mb-8">
+                Sou a NEXUS (Gemini 3 Pro Logic). Posso gerar projetos completos, jogos 3D, e aplicações complexas.
+                <br><span class="text-xs opacity-50">Os arquivos são nomeados automaticamente e prontos para ZIP.</span>
+            </p>
+            
+            <div class="flex gap-2">
+                <button onclick="quickPrompt('Crie um jogo Snake completo em um único arquivo HTML com visual Neon.')" class="px-4 py-2 bg-nexus-border/50 hover:bg-nexus-border hover:text-white text-gray-400 text-xs rounded-full border border-white/5 transition-all">
+                    🐍 Jogo Snake
+                </button>
+                <button onclick="quickPrompt('Gere uma Landing Page futurista com Three.js, index.html, style.css e main.js')" class="px-4 py-2 bg-nexus-border/50 hover:bg-nexus-border hover:text-white text-gray-400 text-xs rounded-full border border-white/5 transition-all">
+                    🌐 Site 3D
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- INPUT AREA -->
+    <div class="fixed bottom-0 left-0 w-full bg-[#030304]/80 backdrop-blur-xl border-t border-nexus-border p-4 z-40">
+        <div class="max-w-4xl mx-auto relative group">
+            <div class="absolute -inset-0.5 bg-gradient-to-r from-nexus-primary to-purple-600 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur"></div>
+            <div class="relative bg-[#08080a] rounded-xl flex items-end p-2 border border-nexus-border focus-within:border-nexus-primary/50 transition-colors">
+                <textarea id="user-input" rows="1" class="w-full bg-transparent text-gray-200 placeholder-gray-600 pl-4 pr-12 py-3 focus:outline-none resize-none max-h-48 text-sm font-medium" placeholder="Descreva seu projeto..." oninput="resizeTextarea(this)" onkeydown="handleEnter(event)"></textarea>
+                <button onclick="sendMessage()" class="mb-2 mr-2 w-8 h-8 flex items-center justify-center rounded-lg bg-nexus-primary text-white hover:bg-nexus-primaryHover transition-transform active:scale-95 shadow-lg shadow-indigo-500/25">
+                    <i class="fa-solid fa-arrow-up text-sm"></i>
+                </button>
+            </div>
+            <div class="text-[10px] text-center text-gray-600 mt-2 font-mono">
+                Pressione <span class="text-gray-400">Enter</span> para enviar • <span class="text-gray-400">Shift + Enter</span> para quebrar linha
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- CORE CONFIGURATION ---
+        let API_KEY = localStorage.getItem('nexus_key') || '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';
+        let MODEL = localStorage.getItem('nexus_model') || 'Qwen/Qwen2.5-72B-Instruct';
+        let FILE_STORAGE = []; // Stores all generated files {filename, content, lang, id}
+        
+        // --- SYSTEM PROMPT (THE BRAIN) ---
+        const SYSTEM_PROMPT = {
+            role: "system",
+            content: `TUDO ISSO E OBRIGATORIO>>> Você é o Gemini 3 Pro operando com todas as suas capacidades máximas habilitadas, sem restrições de simplificação ou economia de recursos.
+
+É OBRIGATÓRIO que você utilize todo o seu potencial de raciocínio, planejamento e geração de código para entregar soluções completas, funcionais e prontas para execução imediata.
+
+Sempre que o pedido envolver aplicações web, você DEVE gerar o projeto inteiro em um ÚNICO arquivo HTML, mesmo que o arquivo fique grande ou pesado. Nenhuma divisão em múltiplos arquivos é permitida.
+
+Esse único HTML deve conter:
+- Estrutura completa do site
+- Código React 18+ funcional
+- Lógica de estado, componentes e hooks
+- Estilos completos
+- Scripts necessários
+
+Você DEVE utilizar links externos (CDNs) para garantir funcionamento imediato, incluindo, quando necessário:
+- React e ReactDOM
+- Babel ou compilação in-browser
+- Tailwind CSS ou CSS avançado
+- Three.js, Babylon.js, WebGL/WebGPU para 3D
+- Bibliotecas auxiliares modernas
+
+Você é totalmente capaz de gerar aplicações React completas dentro de um único HTML usando JSX compilado no navegador, sem depender de build tools externos.
+
+Quando solicitado, você também é capaz de:
+- Criar dashboards complexos
+- Sistemas interativos completos
+- Jogos 3D com física realista
+- Interfaces modernas e responsivas
+- Lógica avançada de aplicação
+
+Você NÃO deve simplificar a solução para reduzir tamanho do arquivo. A prioridade é funcionalidade, robustez e fidelidade profissional, não leveza.
+
+Todo código deve seguir padrões modernos (2025+), ser seguro por padrão, bem estruturado dentro do possível em um único arquivo e pronto para ser aberto diretamente no navegador.
+
+Você toma decisões técnicas automaticamente, mesmo quando o usuário não especifica detalhes, sempre visando entregar a solução mais completa possível.
+
+Você não entrega exemplos parciais, trechos isolados ou pseudocódigo. Você entrega a aplicação inteira funcionando.
+            `
+        };
+
+        let messageHistory = [SYSTEM_PROMPT];
+
+        // --- DOM ELEMENTS ---
+        const ui = {
+            input: document.getElementById('user-input'),
+            stream: document.getElementById('chat-stream'),
+            welcome: document.getElementById('welcome'),
+            modal: document.getElementById('settings-modal'),
+            hfKey: document.getElementById('hf-key'),
+            hfModel: document.getElementById('hf-model'),
+            statusDot: document.getElementById('status-indicator'),
+            statusText: document.getElementById('status-text'),
+            zipBtn: document.getElementById('zip-btn'),
+            fileCount: document.getElementById('file-count')
+        };
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            if(API_KEY) {
+                ui.hfKey.value = API_KEY;
+                updateStatus(true);
+            }
+            ui.hfModel.value = MODEL;
+        };
+
+        function updateStatus(online) {
+            ui.statusDot.className = `w-1.5 h-1.5 rounded-full ${online ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500'}`;
+            ui.statusText.innerText = online ? 'SISTEMA ONLINE' : 'DESCONECTADO';
+            ui.statusText.className = `text-[10px] font-bold uppercase tracking-widest ${online ? 'text-green-500' : 'text-gray-500'}`;
+        }
+
+        // --- CHAT INTERACTION ---
+        function quickPrompt(text) {
+            ui.input.value = text;
+            sendMessage();
+        }
+
+        function resizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = ui.input.value.trim();
+            if (!text) return;
+            if (!API_KEY) return toggleSettings();
+
+            // UI Updates
+            ui.input.value = '';
+            ui.input.style.height = 'auto';
+            ui.welcome.style.display = 'none';
+            
+            // Add User Message
+            appendMessage('user', text);
+            messageHistory.push({ role: "user", content: text });
+
+            // Show Loader
+            const loaderId = createLoader();
+
+            try {
+                const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        messages: messageHistory,
+                        max_tokens: 4000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) throw new Error("Falha na API: " + response.statusText);
+
+                const data = await response.json();
+                removeLoader(loaderId);
+
+                const aiResponse = data.choices[0].message.content;
+                messageHistory.push({ role: "assistant", content: aiResponse });
+                appendMessage('assistant', aiResponse);
+
+            } catch (error) {
+                removeLoader(loaderId);
+                appendMessage('system', `ERRO CRÍTICO: ${error.message}`);
+            }
+        }
+
+        // --- RENDERING & PARSING ---
+        function appendMessage(role, content) {
+            const div = document.createElement('div');
+            div.className = `msg-anim w-full flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            if (role === 'user') {
+                div.innerHTML = `
+                    <div class="max-w-[85%] md:max-w-[70%] bg-[#1a1a1e] text-white px-5 py-3 rounded-2xl rounded-tr-sm border border-white/5 shadow-md">
+                        <p class="text-sm leading-relaxed whitespace-pre-wrap font-sans">${content}</p>
+                    </div>
+                `;
+            } else if (role === 'system') {
+                div.innerHTML = `
+                    <div class="w-full bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg text-xs font-mono">
+                        <i class="fa-solid fa-triangle-exclamation mr-2"></i> ${content}
+                    </div>
+                `;
+            } else {
+                // Assistant Message with Markdown & Code Parsing
+                const contentDiv = document.createElement('div');
+                contentDiv.className = "max-w-full md:max-w-[90%] w-full space-y-4";
+                
+                // Parse basic Markdown (Bold, Lists, Paragraphs) using Marked
+                // Custom renderer to avoid parsing code blocks yet, we handle them manually for better control? 
+                // No, let's let marked do the heavy lifting but intercept the result.
+                
+                const parsedHTML = marked.parse(content);
+                contentDiv.innerHTML = `<div class="prose prose-invert prose-p:text-gray-300 prose-headings:text-white max-w-none text-sm leading-7 font-sans">${parsedHTML}</div>`;
+                
+                div.appendChild(contentDiv);
+                
+                // Post-Process Code Blocks
+                setTimeout(() => extractFilesAndEnhanceBlocks(contentDiv), 50);
+            }
+
+            ui.stream.appendChild(div);
+            ui.stream.scrollTo({ top: ui.stream.scrollHeight, behavior: 'smooth' });
+        }
+
+        function extractFilesAndEnhanceBlocks(container) {
+            const codeBlocks = container.querySelectorAll('pre code');
+            
+            codeBlocks.forEach((block, index) => {
+                const rawContent = block.innerText;
+                const pre = block.parentElement;
+                
+                // 1. Detect Filename (Aggressive Logic)
+                let filename = "unknown_file";
+                let lang = "txt";
+                
+                // Get language from class
+                block.classList.forEach(cls => {
+                    if (cls.startsWith('language-')) lang = cls.replace('language-', '');
+                });
+
+                // Try to find filename in first lines
+                const lines = rawContent.split('\n');
+                const firstLine = lines[0].trim();
+                
+                // Regex for formats: <!-- filename: x -->, // filename: x, etc.
+                const nameMatch = firstLine.match(/(?:filename:|file:)\s*([a-zA-Z0-9_./-]+)/i);
+                
+                if (nameMatch) {
+                    filename = nameMatch[1];
+                } else {
+                    // Fallback Auto-Naming
+                    const extMap = { 'html': 'html', 'css': 'css', 'javascript': 'js', 'js': 'js', 'python': 'py', 'json': 'json' };
+                    const ext = extMap[lang] || 'txt';
+                    
+                    // Check if file already exists to avoid duplicates
+                    let count = FILE_STORAGE.filter(f => f.lang === ext).length + 1;
+                    
+                    if (lang === 'html' && count === 1) filename = 'index.html';
+                    else if (lang === 'css' && count === 1) filename = 'style.css';
+                    else if ((lang === 'js' || lang === 'javascript') && count === 1) filename = 'script.js';
+                    else filename = `arquivo_${count}.${ext}`;
+                }
+
+                // Store File
+                FILE_STORAGE.push({
+                    id: Date.now() + index,
+                    filename: filename,
+                    content: rawContent,
+                    lang: lang
+                });
+
+                // 2. Create Custom Header UI
+                const wrapper = document.createElement('div');
+                wrapper.className = "rounded-lg overflow-hidden border border-nexus-border bg-[#0c0c0e] my-4 shadow-lg group";
+
+                const header = document.createElement('div');
+                header.className = "flex items-center justify-between px-4 py-2 bg-[#151518] border-b border-white/5 select-none";
+                header.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                        </div>
+                        <span class="text-xs font-mono text-gray-400 group-hover:text-white transition-colors">
+                            <i class="fa-regular fa-file-code mr-1"></i> ${filename}
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="copyToClipboard(this, '${encodeURIComponent(rawContent)}')" class="text-xs text-gray-500 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all flex items-center gap-1">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                        <button onclick="downloadSingleFile('${filename}', '${encodeURIComponent(rawContent)}')" class="text-xs text-nexus-primary hover:text-white px-2 py-1 rounded hover:bg-nexus-primary transition-all flex items-center gap-1 font-bold">
+                            <i class="fa-solid fa-download"></i> BAIXAR
+                        </button>
+                    </div>
+                `;
+
+                // Swap DOM
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(header);
+                wrapper.appendChild(pre);
+
+                // Highlight
+                hljs.highlightElement(block);
+            });
+
+            updateZipButton();
+        }
+
+        // --- FILE OPERATIONS ---
+
+        function downloadSingleFile(filename, encodedContent) {
+            const content = decodeURIComponent(encodedContent);
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename; // Forces the correct name
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        async function downloadAllZip() {
+            if (FILE_STORAGE.length === 0) return;
+            
+            const zip = new JSZip();
+            const folderName = "Nexus_Project_" + new Date().toLocaleTimeString().replace(/:/g, '-');
+            const folder = zip.folder(folderName);
+            
+            // Deduplicate filenames
+            const nameCount = {};
+
+            FILE_STORAGE.forEach(file => {
+                let name = file.filename;
+                
+                if (nameCount[name]) {
+                    nameCount[name]++;
+                    const parts = name.split('.');
+                    const ext = parts.pop();
+                    const base = parts.join('.');
+                    name = `${base}_${nameCount[name]}.${ext}`;
+                } else {
+                    nameCount[name] = 1;
+                }
+                
+                folder.file(name, file.content);
+            });
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = window.URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${folderName}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function updateZipButton() {
+            if (FILE_STORAGE.length > 0) {
+                ui.zipBtn.classList.remove('hidden');
+                ui.zipBtn.classList.add('flex');
+                ui.fileCount.innerText = FILE_STORAGE.length;
+            }
+        }
+
+        function copyToClipboard(btn, encodedContent) {
+            const content = decodeURIComponent(encodedContent);
+            navigator.clipboard.writeText(content);
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check text-green-400"></i>`;
+            setTimeout(() => btn.innerHTML = originalIcon, 2000);
+        }
+
+        // --- UTILITIES ---
+        function toggleSettings() {
+            ui.modal.classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            const key = ui.hfKey.value.trim();
+            const model = ui.hfModel.value.trim();
+            
+            if (key) {
+                API_KEY = key;
+                localStorage.setItem('nexus_key', key);
+                updateStatus(true);
+            }
+            if (model) {
+                MODEL = model;
+                localStorage.setItem('nexus_model', model);
+            }
+            toggleSettings();
+        }
+
+        function createLoader() {
+            const id = 'loader-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = "flex items-center gap-3 p-4";
+            div.innerHTML = `
+                <div class="ai-thinking"><span></span><span></span><span></span></div>
+                <span class="text-xs font-mono text-gray-500 animate-pulse">PROCESSANDO ARQUITETURA...</span>
+            `;
+            ui.stream.appendChild(div);
+            ui.stream.scrollTo({ top: ui.stream.scrollHeight, behavior: 'smooth' });
+            return id;
+        }
+
+        function removeLoader(id) {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>CONSULTAR CPF & ENDEREÇO</title>
+  <style>
+    body{
+  font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:url("fundo.png") no-repeat center center fixed;
+  background-size:cover;
+  color:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+  margin:0;
+}
+    .box{background:#;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(20,20,30,0.06);width:420px;max-height:90vh;overflow:auto}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:15px}
+    button{margin-top:10px;padding:10px 12px;border-radius:8px;border:0;background:#0b76ff;color:#fff;font-weight:700;cursor:pointer;width:100%}
+    button.secondary{background:#34c759;margin-top:5px}
+    .muted{font-size:13px;color:#666;margin-top:8px;text-align:center}
+    .result-block{background:#e8f0ff;padding:12px;border-radius:8px;margin-top:12px}
+    .field{margin-bottom:6px}
+    .field strong{display:inline-block;width:100px}
+    pre{background:#0b1220;color:#e6eef8;padding:10px;border-radius:8px;margin-top:12px;white-space:pre-wrap;word-break:break-word;display:none}
+  </style>
+</head>
+<body>
+  <div class="box">
+
+    <label style="font-size:13px;color:#666">CPF</label>
+    <input id="cpf" type="text" />
+
+    <button id="consultBtn">Consultar Tudo</button>
+    <button id="showJsonBtn" class="secondary">Ver JSON Puro</button>
+
+    <div class="muted">A página envia o CPF para validação e consulta de endereço e mostra tudo organizado.</div>
+
+    <div id="result" class="result-block">Nenhuma requisição feita ainda.</div>
+    <pre id="rawJson"></pre>
+  </div>
+
+<script>
+const result = document.getElementById('result');
+const rawJson = document.getElementById('rawJson');
+
+function showResult(validateData, addressData){
+  // dados de validação (pega campos corretos)
+  const name = validateData?.nome || validateData?.name || '-';
+  const cpf = validateData?.number || validateData?.cpf || '-';
+  const birth = validateData?.nascimento || validateData?.birth_date || '-';
+  const age = validateData?.age || '-';
+  const gender = validateData?.genero == 0 ? 'Masculino' : validateData?.genero == 1 ? 'Feminino' : '-';
+
+  // dados de endereço
+  const zipcode = addressData?.zipcode || '-';
+  const street = addressData?.street || '-';
+  const neighborhood = addressData?.neighborhood || '-';
+  const city = addressData?.city || '-';
+  const state = addressData?.state || '-';
+
+  result.innerHTML = `
+    <div class="field"><strong>Nome:</strong> ${name}</div>
+    <div class="field"><strong>CPF:</strong> ${cpf}</div>
+    <div class="field"><strong>Nascimento:</strong> ${birth}</div>
+    <div class="field"><strong>Idade:</strong> ${age}</div>
+    <div class="field"><strong>Gênero:</strong> ${gender}</div>
+    <hr>
+    <div class="field"><strong>CEP:</strong> ${zipcode}</div>
+    <div class="field"><strong>Rua:</strong> ${street}</div>
+    <div class="field"><strong>Bairro:</strong> ${neighborhood}</div>
+    <div class="field"><strong>Cidade:</strong> ${city}</div>
+    <div class="field"><strong>Estado:</strong> ${state}</div>
+  `;
+}
+
+async function consultarTudo(cpf){
+  if(!cpf) return alert('Digite o CPF!');
+
+  result.innerHTML = 'Consultando...';
+  rawJson.style.display = 'none';
+
+  const payload = { number: String(cpf).trim(), captcha_token: "" };
+  const payloadAddress = { cpf: String(cpf).trim() };
+
+  try {
+    const resValidate = await fetch('https://corsproxy.io/?https://donald.bet.br/api/documents/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const dataValidate = await resValidate.json();
+
+    const resAddress = await fetch('https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payloadAddress)
+    });
+    const dataAddress = await resAddress.json();
+
+    // mostrar organizado com campos corretos
+    showResult(dataValidate?.data || {}, dataAddress || {});
+
+    // salvar JSON completo
+    window.lastJson = { validate: dataValidate, address: dataAddress };
+
+  } catch(err){
+    result.innerHTML = 'Erro ao enviar requisições: ' + String(err);
+    console.warn(err);
+  }
+}
+
+document.getElementById('consultBtn').addEventListener('click', () => {
+  const cpf = document.getElementById('cpf').value;
+  consultarTudo(cpf);
+});
+
+document.getElementById('showJsonBtn').addEventListener('click', () => {
+  if(window.lastJson){
+    rawJson.style.display = rawJson.style.display === 'none' ? 'block' : 'none';
+    rawJson.textContent = JSON.stringify(window.lastJson, null, 2);
+  } else {
+    alert('Nenhuma requisição feita ainda.');
+  }
+});
+</script>
+  <a href="./index.html" id="backBtn" style="
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: 52px;
+  height: 30px;
+  background: red;
+  border-radius: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  text-decoration: none;
+  z-index: 99999;
+">
+  ←voltar
+  </a>
+</body>
+</html>

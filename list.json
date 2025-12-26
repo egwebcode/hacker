@@ -1,0 +1,34 @@
+[
+  {
+    "email": "teste",
+    "senha": "teste"
+  },
+  {
+    "email": "a",
+    "senha": "a"
+  },
+  {
+    "email": "lzinhoxl",
+    "senha": "884466"
+  },
+  {
+    "email": "dev_user@site.dev",
+    "senha": "dev@2025"
+  },
+  {
+    "email": "admin_teste@localhost.com",
+    "senha": "admin123"
+  },
+  {
+    "email": "player_ff@game.com",
+    "senha": "ff2024!"
+  },
+  {
+    "email": "user.random@teste.net",
+    "senha": "randomPass1"
+  },
+  {
+    "email": "email@exemplo.org",
+    "senha": "senhaSegura#9"
+  }
+]

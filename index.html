@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EGWEBCODE - DASHBOARD</title>
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: #05050a;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+}
+
+* { box-sizing: border-box; }
+
+#lock {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,5,10,0.96);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.panel {
+    width: 380px;
+    padding: 35px;
+    background: linear-gradient(160deg,#14141e,#0a0a12);
+    border-top: 6px solid #8a2be2;
+    border-bottom: 6px solid #8a2be2;
+    box-shadow: 0 0 60px rgba(138,43,226,.45);
+}
+
+h1 {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 3px;
+    color: #8a2be2;
+    margin-bottom: 25px;
+}
+
+input {
+    width: 100%;
+    margin-top: 15px;
+    padding: 14px;
+    background: #000;
+    border: 1px solid #333;
+    color: #fff;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    margin-top: 22px;
+    padding: 15px;
+    background: #8a2be2;
+    border: none;
+    color: white;
+    font-family: 'Orbitron';
+    font-size: 14px;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.status {
+    margin-top: 18px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.ok { color: #2ed573; }
+.err { color: #ff4757; }
+.wait { color: #ffa502; }
+</style>
+</head>
+
+<body>
+
+<div id="lock">
+    <div class="panel">
+        <h1>NEXUS AUTH</h1>
+
+        <input id="user" placeholder="USER / EMAIL">
+        <input id="pass" type="password" placeholder="ACCESS KEY">
+
+        <button id="btn">AUTHENTICATE</button>
+        <div id="msg" class="status"></div>
+    </div>
+</div>
+
+<script>
+/* ===============================
+   CONFIG
+================================ */
+const JSON_URL = "./list.json";
+const SU = "nx_secure_user";
+const SP = "nx_secure_pass";
+let attempts = 0;
+
+/* ===============================
+   HARD UI BLOCK
+================================ */
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+    if (
+        e.key === "F12" ||
+        e.key === "Escape" ||
+        (e.ctrlKey && e.shiftKey) ||
+        (e.ctrlKey && e.key.toLowerCase() === "u")
+    ) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+/* DevTools heuristic */
+setInterval(() => {
+    const w = window.outerWidth - window.innerWidth > 160;
+    const h = window.outerHeight - window.innerHeight > 160;
+    if (w || h) {
+        location.reload();
+    }
+}, 800);
+
+/* ===============================
+   AUTH LOGIC
+================================ */
+const u = document.getElementById("user");
+const p = document.getElementById("pass");
+const m = document.getElementById("msg");
+const b = document.getElementById("btn");
+const lock = document.getElementById("lock");
+
+u.value = sessionStorage.getItem(SU) || "";
+p.value = sessionStorage.getItem(SP) || "";
+
+async function auth(auto=false) {
+    if (!u.value || !p.value) return;
+
+    if (attempts >= 5) {
+        m.textContent = "TOO MANY ATTEMPTS";
+        m.className = "status err";
+        b.disabled = true;
+        return;
+    }
+
+    m.textContent = "VALIDATING...";
+    m.className = "status wait";
+    b.disabled = true;
+
+    try {
+        const r = await fetch(JSON_URL, { cache: "no-store" });
+        const db = await r.json();
+
+        const ok = db.find(e =>
+            (e.user === u.value || e.email === u.value || e.usuario === u.value) &&
+            (e.pass === p.value || e.senha === p.value)
+        );
+
+        if (!ok) throw "DENIED";
+
+        sessionStorage.setItem(SU, u.value);
+        sessionStorage.setItem(SP, p.value);
+
+        m.textContent = "ACCESS GRANTED";
+        m.className = "status ok";
+
+        setTimeout(() => {
+            lock.remove(); // 🔓 SÓ AQUI LIBERA
+        }, 900);
+
+    } catch {
+        attempts++;
+        m.textContent = "ACCESS DENIED";
+        m.className = "status err";
+        b.disabled = false;
+
+        if (auto) {
+            sessionStorage.removeItem(SU);
+            sessionStorage.removeItem(SP);
+        }
+    }
+}
+
+b.onclick = () => auth(false);
+if (u.value && p.value) auth(true);
+</script>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: url('fundo.png') no-repeat center center fixed;
+        background-size: cover;
+        font-family: Arial, sans-serif;
+    }
+
+    /* Centralização geral */
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        min-height: 100vh;
+        backdrop-filter: blur(4px);
+    }
+
+    /* Logo animada redonda */
+    .logo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        animation: pulse 2s infinite ease-in-out;
+        margin-bottom: 30px;
+        border: 3px solid white;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.07); }
+        100% { transform: scale(1); }
+    }
+
+    .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Blocos/menu */
+    .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .menu a {
+        text-decoration: none;
+        color: #fff;
+        text-align: center;
+        font-size: 20px;
+        padding: 18px;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.55);
+        transition: .3s;
+        font-weight: bold;
+    }
+
+    .menu a:hover {
+        background: rgba(255,255,255,0.8);
+        color: #000;
+        transform: scale(1.05);
+    }
+</style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Logo circular animada -->
+        <div class="logo">
+            <img src="logo.png" alt="LOGO">
+        </div>
+
+        <!-- Menu com links -->
+        <div class="menu">
+            <a href="cpf.html">👤 CONSULTAR CPF & ENDEREÇO</a>
+            <a href="gerador.html">🔐 GERAR SENHAS</a>
+            <a href="scripts.html">🛜 SCRIPTS FAVORITOS</a>
+            <a href="nexushacker.html">🤖 IA NEXUS HACKER WEB</a>
+            <a href="nexus_site.html">🤖IA NEXUS AI SITES</a>
+            <a href="sobre.html">🌐 SOBRE EG WEBCODE</a>
+        </div>
+    </div>
+</body>
+</html>

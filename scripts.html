@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+body{
+  margin:0;padding:15px;
+  background:url('fundo.png') center/cover no-repeat fixed;
+  font-family:Arial,sans-serif;color:#fff;
+}
+.container{
+  max-width:750px;margin:auto;
+  background:rgba(0,0,0,.30);
+  backdrop-filter:blur(5px);
+  padding:12px;border-radius:12px;
+}
+
+/* caixa dos scripts */
+.box{
+  background:rgba(0,0,0,.45);
+  border-left:4px solid #00eaff;
+  margin:12px 0;padding:10px;
+  border-radius:10px;
+}
+
+/* título */
+.box h2{
+  margin:0 0 6px;font-size:18px;color:#00eaff;
+}
+
+/* texto */
+.box p{
+  margin:0 0 8px;font-size:13px;opacity:.9;
+}
+
+/* área de código */
+.box textarea{
+  width:100%;height:85px;border:none;
+  background:rgba(0,0,0,.55);
+  font-size:13px;color:#00faff;
+  border-radius:8px;padding:8px;
+}
+
+/* botão */
+button{
+  width:100%;margin-top:6px;padding:10px;
+  background:#00eaff;color:#000;
+  border:none;border-radius:8px;
+  font-weight:bold;font-size:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+</div>
+<div class="box">
+<h2>Eruda DevTools</h2>
+<p>Console para celular, inspecionar elementos, rede, erros etc.</p>
+<textarea id="eruda">javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/eruda';document.body.appendChild(s);s.onload=function(){eruda.init()}})();</textarea>
+<button onclick="copy('eruda')">COPIAR</button>
+</div>
+
+<!-- SCRIPT 2: VCONSOLE -->
+<div class="box">
+<h2>vConsole</h2>
+<p>DevTools leve para mobile — logs e console digitável.</p>
+<textarea id="vconsole">javascript:(function(){var s=document.createElement('script');s.src='https://unpkg.com/vconsole@3.3.4/dist/vconsole.min.js';document.body.appendChild(s);s.onload=function(){new VConsole()}})();</textarea>
+<button onclick="copy('vconsole')">COPIAR</button>
+</div>
+
+<!-- SCRIPT 3: VIEW-SOURCE -->
+<div class="box">
+<h2>Ver Código Fonte</h2>
+<p>Abre o código HTML da página atual.</p>
+<textarea id="source">javascript:(()=>{window.open('view-source:'+location.href)})();</textarea>
+<button onclick="copy('source')">COPIAR</button>
+</div>
+
+<!-- SCRIPT 4: HIGHLIGHT ELEMENTOS -->
+<div class="box">
+<h2>Destacar Elementos</h2>
+<p>Adiciona bordas vermelhas em tudo para inspeção visual.</p>
+<textarea id="highlight">javascript:(function(){var css='*{outline:2px dashed red !important}';var s=document.createElement('style');s.appendChild(document.createTextNode(css));document.head.appendChild(s);})();</textarea>
+<button onclick="copy('highlight')">COPIAR</button>
+</div>
+
+</div>
+
+<script>
+function copy(id){
+ let text=document.getElementById(id);
+ text.select();text.setSelectionRange(0,99999);
+ navigator.clipboard.writeText(text.value);
+ alert("Copiado ✔");
+}
+</script>
+<a href="./index.html" id="backBtn" style="
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: 52px;
+  height: 30px;
+  background: red;
+  border-radius: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  text-decoration: none;
+  z-index: 99999;
+">
+  ←voltar
+</a>
+</body>
+</html>
