@@ -344,39 +344,53 @@ fileInput.onchange=()=>{
 };
 </script>
 <script>
-  javascript:(function(){
-  // Procura todas as mensagens no chat
-  const msgs = document.querySelectorAll(".msg.bot, .msg.user");
-  if(!msgs.length) return alert("Nenhuma mensagem encontrada.");
+javascript:(function(){
+  // Remove botão antigo, se existir
+  const oldBtn = document.getElementById("bookmarkDownloadBtn");
+  if(oldBtn) oldBtn.remove();
 
-  // Pega a última mensagem do bot
-  let lastBot = Array.from(msgs).reverse().find(m => m.classList.contains("bot"));
-  if(!lastBot) return alert("Nenhuma mensagem do bot encontrada.");
+  // Cria botão
+  const btn = document.createElement("img");
+  btn.id = "bookmarkDownloadBtn";
+  btn.src = "baixar.png"; // coloque a URL do seu ícone se necessário
+  btn.style.position = "fixed";
+  btn.style.top = "8px";
+  btn.style.right = "8px";
+  btn.style.width = "40px";
+  btn.style.height = "40px";
+  btn.style.cursor = "pointer";
+  btn.style.zIndex = 99999;
+  document.body.appendChild(btn);
 
-  // Procura por <textarea> dentro da mensagem (onde o código gerado fica)
-  const codeArea = lastBot.querySelector("textarea");
-  if(!codeArea) return alert("Nenhum código encontrado na última mensagem.");
+  // Função de download
+  btn.onclick = function(){
+    const msgs = document.querySelectorAll(".msg.bot, .msg.user");
+    if(!msgs.length){ alert("Nenhuma mensagem encontrada."); return; }
 
-  // Pega o código limpo
-  const code = codeArea.value.trim();
-  if(!code) return alert("Código vazio.");
+    let lastBot = Array.from(msgs).reverse().find(m=>m.classList.contains("bot"));
+    if(!lastBot){ alert("Nenhuma mensagem do bot encontrada."); return; }
 
-  // Define nome automático e extensão
-  let ext = ".txt"; // padrão
-  if(code.includes("<html") || code.includes("</html>")) ext = ".html";
-  else if(code.includes("<?php")) ext = ".php";
+    const codeArea = lastBot.querySelector("textarea");
+    if(!codeArea){ alert("Nenhum código encontrado na última mensagem."); return; }
 
-  const filename = "codigo-gerado" + ext;
+    const code = codeArea.value.trim();
+    if(!code){ alert("Código vazio."); return; }
 
-  // Cria blob e dispara download
-  const blob = new Blob([code], {type:"text/plain"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
+    let ext = ".txt";
+    if(code.includes("<html") || code.includes("</html>")) ext = ".html";
+    else if(code.includes("<?php")) ext = ".php";
 
-  console.log("Download automático iniciado:", filename);
+    const filename = "codigo-gerado" + ext;
+    const blob = new Blob([code], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+
+    console.log("Download iniciado:", filename);
+  };
+
 })();
 </script>
 </body>
-</html>
+</htmlhtml
