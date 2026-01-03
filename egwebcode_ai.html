@@ -349,7 +349,7 @@ javascript:(function(){
   const oldBtn = document.getElementById("bookmarkDownloadBtn");
   if(oldBtn) oldBtn.remove();
 
-  // Cria botão fixo
+  // Cria botão fixo no canto direito
   const btn = document.createElement("img");
   btn.id = "bookmarkDownloadBtn";
   btn.src = "baixar.png"; // coloque a URL do seu ícone
@@ -362,26 +362,36 @@ javascript:(function(){
   btn.style.zIndex = 99999;
   document.body.appendChild(btn);
 
-  // Função de download
+  // Função de download do último código
   btn.onclick = function(){
     // Seleciona todas as mensagens do bot
     const botMsgs = document.querySelectorAll(".message-row.bot, .msg.bot");
     if(!botMsgs.length){ alert("Nenhuma mensagem do bot encontrada."); return; }
 
-    // Pega a última mensagem
+    // Pega a última mensagem do bot
     const lastBot = botMsgs[botMsgs.length - 1];
     if(!lastBot){ alert("Nenhuma mensagem encontrada."); return; }
 
-    // Pega o texto completo da mensagem
+    // Pega o conteúdo completo da mensagem
     let code = lastBot.innerText || lastBot.textContent;
     code = code.trim();
     if(!code){ alert("Código vazio."); return; }
 
+    // Remove linhas extras de "A MELHOR INTELIGENCIA..." ou mensagens que não sejam código
+    // Opcional: remover textos antes do <!DOCTYPE> ou <?php
+    const doctypeIndex = code.indexOf("<!DOCTYPE");
+    const phpIndex = code.indexOf("<?php");
+    let startIndex = 0;
+    if(doctypeIndex !== -1) startIndex = doctypeIndex;
+    else if(phpIndex !== -1) startIndex = phpIndex;
+    code = code.substring(startIndex);
+
     // Detecta extensão automaticamente
     let ext = ".txt";
-    if(code.includes("<html") || code.includes("</html>")) ext = ".html";
-    else if(code.includes("<?php")) ext = ".php";
+    if(code.startsWith("<!DOCTYPE html") || code.includes("<html")) ext = ".html";
+    else if(code.startsWith("<?php")) ext = ".php";
 
+    // Nome do arquivo
     const filename = "codigo-gerado" + ext;
 
     // Cria blob e dispara download
@@ -395,5 +405,6 @@ javascript:(function(){
   };
 })();
 </script>
+  
 </body>
 </htmlhtml
