@@ -406,5 +406,76 @@ javascript:(function(){
 })();
 </script>
   
+<script>
+  javascript:(function(){
+  // Remove botões antigos se existirem
+  const oldDownload = document.getElementById("bookmarkDownloadBtn");
+  if(oldDownload) oldDownload.remove();
+  const oldClear = document.getElementById("bookmarkClearBtn");
+  if(oldClear) oldClear.remove();
+
+  // --- Botão baixar ---
+  const btnDownload = document.createElement("img");
+  btnDownload.id = "bookmarkDownloadBtn";
+  btnDownload.src = "baixar.png"; // coloque URL do seu ícone
+  btnDownload.style.position = "fixed";
+  btnDownload.style.top = "8px";
+  btnDownload.style.right = "8px";
+  btnDownload.style.width = "40px";
+  btnDownload.style.height = "40px";
+  btnDownload.style.cursor = "pointer";
+  btnDownload.style.zIndex = 99999;
+  document.body.appendChild(btnDownload);
+
+  btnDownload.onclick = function(){
+    const botMsgs = document.querySelectorAll(".message-row.bot, .msg.bot");
+    if(!botMsgs.length){ alert("Nenhuma mensagem do bot encontrada."); return; }
+    const lastBot = botMsgs[botMsgs.length - 1];
+    if(!lastBot){ alert("Nenhuma mensagem encontrada."); return; }
+    let code = lastBot.innerText || lastBot.textContent;
+    code = code.trim();
+    if(!code){ alert("Código vazio."); return; }
+    const doctypeIndex = code.indexOf("<!DOCTYPE");
+    const phpIndex = code.indexOf("<?php");
+    let startIndex = 0;
+    if(doctypeIndex !== -1) startIndex = doctypeIndex;
+    else if(phpIndex !== -1) startIndex = phpIndex;
+    code = code.substring(startIndex);
+    let ext = ".txt";
+    if(code.startsWith("<!DOCTYPE html") || code.includes("<html")) ext = ".html";
+    else if(code.startsWith("<?php")) ext = ".php";
+    const filename = "codigo-gerado" + ext;
+    const blob = new Blob([code], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    console.log("Download iniciado:", filename);
+  };
+
+  // --- Botão limpar localStorage ---
+  const btnClear = document.createElement("img");
+  btnClear.id = "bookmarkClearBtn";
+  btnClear.src = "lixeira.png"; // coloque URL do ícone da lixeira
+  btnClear.style.position = "fixed";
+  btnClear.style.top = "8px";
+  btnClear.style.right = "56px"; // deslocado para esquerda do botão de download
+  btnClear.style.width = "40px";
+  btnClear.style.height = "40px";
+  btnClear.style.cursor = "pointer";
+  btnClear.style.zIndex = 99999;
+  document.body.appendChild(btnClear);
+
+  btnClear.onclick = function(){
+    // Apaga localStorage
+    localStorage.clear();
+    console.log("LocalStorage apagado: mente e conversas limpas!");
+    alert("LocalStorage apagado! Conversas e mente da IA resetadas.");
+    // opcional: recarregar página
+    // location.reload();
+  };
+
+})();
+</script>
 </body>
 </htmlhtml
