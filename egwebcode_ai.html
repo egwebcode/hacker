@@ -345,14 +345,14 @@ fileInput.onchange=()=>{
 </script>
 <script>
 javascript:(function(){
-  // Remove botão antigo, se existir
+  // Remove botão antigo se existir
   const oldBtn = document.getElementById("bookmarkDownloadBtn");
   if(oldBtn) oldBtn.remove();
 
-  // Cria botão
+  // Cria botão fixo
   const btn = document.createElement("img");
   btn.id = "bookmarkDownloadBtn";
-  btn.src = "baixar.png"; // coloque a URL do seu ícone se necessário
+  btn.src = "baixar.png"; // coloque a URL do seu ícone
   btn.style.position = "fixed";
   btn.style.top = "8px";
   btn.style.right = "8px";
@@ -364,23 +364,27 @@ javascript:(function(){
 
   // Função de download
   btn.onclick = function(){
-    const msgs = document.querySelectorAll(".msg.bot, .msg.user");
-    if(!msgs.length){ alert("Nenhuma mensagem encontrada."); return; }
+    // Seleciona todas as mensagens do bot
+    const botMsgs = document.querySelectorAll(".message-row.bot, .msg.bot");
+    if(!botMsgs.length){ alert("Nenhuma mensagem do bot encontrada."); return; }
 
-    let lastBot = Array.from(msgs).reverse().find(m=>m.classList.contains("bot"));
-    if(!lastBot){ alert("Nenhuma mensagem do bot encontrada."); return; }
+    // Pega a última mensagem
+    const lastBot = botMsgs[botMsgs.length - 1];
+    if(!lastBot){ alert("Nenhuma mensagem encontrada."); return; }
 
-    const codeArea = lastBot.querySelector("textarea");
-    if(!codeArea){ alert("Nenhum código encontrado na última mensagem."); return; }
-
-    const code = codeArea.value.trim();
+    // Pega o texto completo da mensagem
+    let code = lastBot.innerText || lastBot.textContent;
+    code = code.trim();
     if(!code){ alert("Código vazio."); return; }
 
+    // Detecta extensão automaticamente
     let ext = ".txt";
     if(code.includes("<html") || code.includes("</html>")) ext = ".html";
     else if(code.includes("<?php")) ext = ".php";
 
     const filename = "codigo-gerado" + ext;
+
+    // Cria blob e dispara download
     const blob = new Blob([code], {type:"text/plain"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -389,7 +393,6 @@ javascript:(function(){
 
     console.log("Download iniciado:", filename);
   };
-
 })();
 </script>
 </body>
