@@ -343,6 +343,75 @@ fileInput.onchange=()=>{
   r.readAsText(f);
 };
 </script>
+<script>
+(function(){
 
+  /* ================= REMOVER SE JÁ EXISTIR ================= */
+  const oldDownload = document.getElementById("eg-download-btn");
+  if(oldDownload) oldDownload.remove();
+  const oldClear = document.getElementById("eg-clear-btn");
+  if(oldClear) oldClear.remove();
+
+  /* ================= BOTÃO BAIXAR ================= */
+  const downloadBtn = document.createElement("img");
+  downloadBtn.id = "eg-download-btn";
+  downloadBtn.src = "https://cdn-icons-png.flaticon.com/128/1091/1091007.png";
+  downloadBtn.style.position = "fixed";
+  downloadBtn.style.top = "10px";
+  downloadBtn.style.right = "10px";
+  downloadBtn.style.width = "38px";
+  downloadBtn.style.height = "38px";
+  downloadBtn.style.cursor = "pointer";
+  downloadBtn.style.zIndex = "999999";
+  document.body.appendChild(downloadBtn);
+
+  downloadBtn.onclick = function(){
+    const botMsgs = document.querySelectorAll(".message-row.bot, .msg.bot");
+    if(!botMsgs.length) return alert("Nenhuma mensagem do bot.");
+
+    const lastBot = botMsgs[botMsgs.length - 1];
+    let code = lastBot.innerText || lastBot.textContent;
+    code = code.trim();
+    if(!code) return alert("Código vazio.");
+
+    // Limpa lixo antes do código real
+    let start = 0;
+    if(code.includes("<!DOCTYPE")) start = code.indexOf("<!DOCTYPE");
+    else if(code.includes("<?php")) start = code.indexOf("<?php");
+    code = code.substring(start);
+
+    // Detecta extensão
+    let ext = ".txt";
+    if(code.includes("<html")) ext = ".html";
+    if(code.startsWith("<?php")) ext = ".php";
+
+    const blob = new Blob([code], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "arquivo-gerado" + ext;
+    a.click();
+  };
+
+  /* ================= BOTÃO LIXEIRA ================= */
+  const clearBtn = document.createElement("img");
+  clearBtn.id = "eg-clear-btn";
+  clearBtn.src = "https://cdn-icons-png.flaticon.com/128/10337/10337388.png";
+  clearBtn.style.position = "fixed";
+  clearBtn.style.top = "10px";
+  clearBtn.style.right = "56px";
+  clearBtn.style.width = "38px";
+  clearBtn.style.height = "38px";
+  clearBtn.style.cursor = "pointer";
+  clearBtn.style.zIndex = "999999";
+  document.body.appendChild(clearBtn);
+
+  clearBtn.onclick = function(){
+    localStorage.clear();
+    alert("Tudo apagado! Conversas e mente resetadas.");
+    // location.reload(); // se quiser recarregar automaticamente
+  };
+
+})();
+</script>
   </body>
 </html>
