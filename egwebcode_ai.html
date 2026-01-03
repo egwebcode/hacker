@@ -414,5 +414,73 @@ fileInput.onchange=()=>{
 
 })();
 </script>
+
+ <script>
+  javascript:(function(){
+  const KEY = "systemPrompt"; // chave da mente no localStorage
+
+  // Remove painel antigo se existir
+  const old = document.getElementById("eg-mind-panel");
+  if(old) old.remove();
+
+  // Overlay
+  const overlay = document.createElement("div");
+  overlay.id = "eg-mind-panel";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(0,0,0,0.7)";
+  overlay.style.zIndex = "999999";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+
+  // Caixa
+  const box = document.createElement("div");
+  box.style.width = "90%";
+  box.style.maxWidth = "600px";
+  box.style.background = "#111";
+  box.style.padding = "15px";
+  box.style.borderRadius = "10px";
+
+  // Textarea
+  const textarea = document.createElement("textarea");
+  textarea.style.width = "100%";
+  textarea.style.height = "260px";
+  textarea.style.background = "#000";
+  textarea.style.color = "#0f0";
+  textarea.style.fontSize = "14px";
+  textarea.style.padding = "10px";
+  textarea.value = localStorage.getItem(KEY) || "";
+
+  // Botões
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Salvar mente";
+  saveBtn.style.marginTop = "10px";
+  saveBtn.style.padding = "10px";
+  saveBtn.style.width = "100%";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "Cancelar";
+  closeBtn.style.marginTop = "6px";
+  closeBtn.style.padding = "10px";
+  closeBtn.style.width = "100%";
+
+  saveBtn.onclick = () => {
+    localStorage.setItem(KEY, textarea.value);
+    alert("Mente da IA salva!");
+    overlay.remove();
+  };
+
+  closeBtn.onclick = () => overlay.remove();
+
+  box.appendChild(textarea);
+  box.appendChild(saveBtn);
+  box.appendChild(closeBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+})();
+              </script>
+  
+  
   </body>
 </html>
