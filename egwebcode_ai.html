@@ -343,6 +343,40 @@ fileInput.onchange=()=>{
   r.readAsText(f);
 };
 </script>
+<script>
+  javascript:(function(){
+  // Procura todas as mensagens no chat
+  const msgs = document.querySelectorAll(".msg.bot, .msg.user");
+  if(!msgs.length) return alert("Nenhuma mensagem encontrada.");
 
+  // Pega a última mensagem do bot
+  let lastBot = Array.from(msgs).reverse().find(m => m.classList.contains("bot"));
+  if(!lastBot) return alert("Nenhuma mensagem do bot encontrada.");
+
+  // Procura por <textarea> dentro da mensagem (onde o código gerado fica)
+  const codeArea = lastBot.querySelector("textarea");
+  if(!codeArea) return alert("Nenhum código encontrado na última mensagem.");
+
+  // Pega o código limpo
+  const code = codeArea.value.trim();
+  if(!code) return alert("Código vazio.");
+
+  // Define nome automático e extensão
+  let ext = ".txt"; // padrão
+  if(code.includes("<html") || code.includes("</html>")) ext = ".html";
+  else if(code.includes("<?php")) ext = ".php";
+
+  const filename = "codigo-gerado" + ext;
+
+  // Cria blob e dispara download
+  const blob = new Blob([code], {type:"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+
+  console.log("Download automático iniciado:", filename);
+})();
+</script>
 </body>
 </html>
