@@ -2,485 +2,513 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>EG WEBCODE AI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EG WEBCODE AI - Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Fontes Profissionais -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --bg:#0b141a;
-  --panel:#111b21;
-  --bot:#202c33;
-  --user:#005c4b;
-  --text:#e9edef;
-  --muted:#8696a0;
-  --accent:#00a884;
+/* ==================== LAYOUT CYBERPUNK (CSS) ==================== */
+:root {
+  --bg-app: #09090b;       
+  --bg-panel: #18181b;     
+  --primary: #00ff9d;      
+  --primary-glow: rgba(0, 255, 157, 0.15);
+  --user-msg-bg: #27272a;  
+  --bot-msg-bg: #101012;   
+  --border: 1px solid rgba(255,255,255,0.08);
+  --text: #e4e4e7;
+  --muted: #a1a1aa;
 }
 
-*{box-sizing:border-box}
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
 
-html,body{
-  margin:0;
-  height:100%;
-  background:var(--bg);
-  font-family:system-ui,Inter,sans-serif;
-  color:var(--text);
-  overflow:hidden;
-}
-
-/* HEADER */
-header{
-  height:56px;
-  background:var(--panel);
-  display:flex;
-  align-items:center;
-  padding:0 14px;
-  gap:10px;
+html, body {
+  height: 100%;
+  background-color: var(--bg-app);
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-header img{
-  height:32px;
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* --- HEADER --- */
+header {
+  height: 64px;
+  background: rgba(24, 24, 27, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 15px;
+  border-bottom: var(--border);
+  z-index: 10;
 }
 
-header .info{
-  flex:1;
+header .logo {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--primary), #00c2cb);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 0 15px var(--primary-glow);
+  color: #000;
+  font-weight: bold;
 }
 
-header h1{
-  font-size:15px;
-  margin:0;
+header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
 }
 
-header span{
-  font-size:12px;
-  color:var(--muted);
+header h1 span { color: var(--primary); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+
+header .status {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 100px;
+  width: fit-content;
+}
+header .status::before { content: ''; width: 6px; height: 6px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; }
+
+.actions { margin-left: auto; }
+.actions button {
+  background: rgba(255,255,255,0.05);
+  border: var(--border);
+  color: var(--text);
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.actions button:hover { background: #ef4444; border-color: #ef4444; color: #fff; transform: rotate(15deg); }
+
+/* --- CHAT AREA --- */
+#chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-image: radial-gradient(circle at 50% 50%, rgba(0, 255, 157, 0.03) 0%, transparent 50%);
 }
 
-/* CHAT */
-#chat{
-  height:calc(100vh - 112px);
-  padding:12px;
-  overflow-y:auto;
-  background:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMGIxNDFhIi8+PHBhdGggZD0iTTAgMTBoMTBWMHoiIGZpbGw9IiMwZDE3MWYiLz48L3N2Zz4=');
+.msg {
+  max-width: 85%;
+  padding: 0;
+  animation: slideUp .3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.bot { align-self: flex-start; min-width: 300px; align-items: flex-start; }
+
+.msg .role {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 4px;
+}
+.msg.user .role { text-align: right; padding-right: 4px; color: var(--primary); }
+
+/* Conteudo do Texto */
+.msg-content {
+  background: var(--bot-msg-bg);
+  padding: 14px 18px;
+  border-radius: 0 16px 16px 16px;
+  border: var(--border);
+  line-height: 1.6;
+  font-size: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  width: 100%;
+}
+.msg.user .msg-content {
+  background: var(--user-msg-bg);
+  border-radius: 16px 0 16px 16px;
+  border-color: rgba(255,255,255,0.05);
 }
 
-/* MESSAGES */
-.msg{
-  max-width:80%;
-  padding:10px 12px;
-  margin-bottom:8px;
-  border-radius:10px;
-  line-height:1.5;
-  word-wrap:break-word;
+/* --- CÓDIGO --- */
+.code-block {
+  background: #0d0e11;
+  border: 1px solid #333;
+  border-radius: 12px;
+  margin-top: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.code-header {
+  background: #1e1e24;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+}
+.code-header span {
+  font-size: 12px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  background: #333;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.code-block pre {
+  margin: 0;
+  padding: 15px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #a5b3ce;
+  line-height: 1.6;
 }
 
-.bot{
-  background:var(--bot);
-  border-top-left-radius:0;
+/* --- NOVO BOTÃO DE DOWNLOAD NO RODAPÉ DA MSG --- */
+.msg-footer-btn {
+  margin-top: 8px;
+  background: rgba(0, 255, 157, 0.1);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.msg-footer-btn:hover {
+  background: var(--primary);
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 157, 0.2);
 }
 
-.user{
-  background:var(--user);
-  margin-left:auto;
-  border-top-right-radius:0;
+/* --- FOOTER (INPUT) --- */
+footer {
+  background: var(--bg-panel);
+  padding: 15px 20px;
+  border-top: var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  position: relative;
+  z-index: 20;
 }
+footer label {
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  font-size: 20px;
+  color: var(--muted);
+  transition: 0.2s;
+}
+footer label:hover { color: #fff; background: rgba(255,255,255,0.1); }
+footer textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 150px;
+  background: #09090b;
+  border: var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: #fff;
+  resize: none;
+  font-family: inherit;
+  transition: 0.2s;
+}
+footer textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.1); }
+footer button#sendBtn {
+  width: 50px;
+  height: 44px;
+  background: var(--primary);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-size: 0;
+  cursor: pointer;
+  transition: transform .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+footer button#sendBtn::after { content: '➤'; font-size: 18px; font-weight: bold; }
+footer button#sendBtn:hover { opacity: 0.9; transform: scale(1.05); }
 
-/* CODE PANEL */
-.code{
-  margin-top:8px;
-  background:#0b141a;
-  border-radius:8px;
-  padding:8px;
-}
-
-.code textarea{
-  width:100%;
-  height:180px;
-  background:#0b141a;
-  color:#9be0c3;
-  border:none;
-  resize:none;
-  font-family:Consolas,monospace;
-}
-
-.actions{
-  display:flex;
-  gap:6px;
-  margin-top:6px;
-}
-
-.actions input,
-.actions select{
-  flex:1;
-  background:#111b21;
-  border:1px solid #2a3942;
-  color:var(--text);
-  border-radius:6px;
-  padding:6px;
-}
-
-.actions button{
-  background:var(--accent);
-  border:none;
-  border-radius:6px;
-  padding:6px 10px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-/* FOOTER */
-footer{
-  height:56px;
-  background:var(--panel);
-  display:flex;
-  align-items:center;
-  padding:8px;
-  gap:6px;
-}
-
-footer textarea{
-  flex:1;
-  height:40px;
-  border-radius:20px;
-  border:none;
-  padding:10px 14px;
-  resize:none;
-  background:#2a3942;
-  color:var(--text);
-}
-
-footer button{
-  background:var(--accent);
-  border:none;
-  border-radius:50%;
-  width:40px;
-  height:40px;
-  font-size:18px;
-  cursor:pointer;
-}
-
-footer label{
-  cursor:pointer;
-  font-size:18px;
-}
-  /* ===== FOOTER FIX MOBILE ===== */
-#footer{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#111b21;
-  display:flex;
-  align-items:flex-end;
-  gap:10px;
-  padding:12px;
-  border-top:1px solid #2a3942;
-  z-index:999;
-}
-
-#footer .clip{
-  font-size:26px;
-  cursor:pointer;
-  padding:8px;
-}
-
-#input{
-  flex:1;
-  min-height:52px;
-  max-height:140px;
-  background:#2a3942;
-  border:none;
-  border-radius:18px;
-  padding:14px;
-  font-size:16px;
-  color:#e9edef;
-  resize:none;
-  line-height:1.4;
-}
-
-#sendBtn{
-  min-width:90px;
-  height:52px;
-  background:#00a884;
-  color:#000;
-  border:none;
-  border-radius:18px;
-  font-size:16px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-#sendBtn:active{
-  transform:scale(.97);
-}
-
-/* Ajuste do chat para não ficar atrás do footer */
-#chat{
-  padding-bottom:90px;
-}
+/* LOADING */
+.loading { display: flex; gap: 6px; padding: 10px 14px; background: var(--bot-msg-bg); border-radius: 0 16px 16px 16px; border: var(--border); width: fit-content; }
+.loading span { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: bounce 0.6s infinite; }
+.loading span:nth-child(2) { animation-delay: 0.15s; background: #00c2cb; }
+.loading span:nth-child(3) { animation-delay: 0.3s; background: #fff; }
+@keyframes bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
 </style>
 </head>
-
 <body>
 
 <header>
-  <img src="logo.png">
-  <div class="info">
-    <h1>EG WEBCODE AI</h1>
-    <span>online</span>
+  <div class="logo">⚡</div>
+  <div>
+    <h1>EG <span>WEBCODE</span> AI</h1>
+    <div class="status">System Online</div>
+  </div>
+  <div class="actions">
+    <button onclick="clearChat()" title="Limpar conversa">🗑️</button>
   </div>
 </header>
 
 <div id="chat"></div>
 
-  <footer id="footer">
-  <label for="file" class="clip">📎</label>
-  <input type="file" id="file" hidden accept=".html,.php,.js,.py,.txt">
-
-  <textarea
-    id="input"
-    placeholder="Digite sua mensagem..."
-    rows="1"
-  ></textarea>
-
+<footer>
+  <label for="file" title="Anexar código">📎</label>
+  <input type="file" id="file" hidden accept=".html,.php,.js,.py,.txt,.css">
+  <textarea id="input" placeholder="Digite sua mensagem ou solicite um código..." rows="1"></textarea>
   <button id="sendBtn" onclick="send()">ENVIAR</button>
 </footer>
 
-<script>
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-const fileInput = document.getElementById("file");
+  <script>
+const chat=document.getElementById("chat"),
+      input=document.getElementById("input"),
+      fileInput=document.getElementById("file");
 
-const API_URL = "https://dtznnhhhlbzppuqldlwq.supabase.co/functions/v1/chat-free";
-const API_KEY = "COLOQUE_SEU_TOKEN_AQUI";
+const API_URL="https://dtznnhhhlbzppuqldlwq.supabase.co/functions/v1/chat-free";
+const API_KEY="COLOQUE_SEU_TOKEN_AQUI";
 
-let history = JSON.parse(localStorage.getItem("eg_history")||"[]");
-let busy=false;
+let history=JSON.parse(localStorage.getItem("eg_history")||"[]"),
+    busy=false;
 
-/* Render history */
-history.forEach(m=>addMsg(m.role,m.text));
-
+/* ================= UTIL ================= */
 function cleanText(t){
-  return t
-    .replace(/[*`"]/g,"")
-    .replace(/\n{3,}/g,"\n\n");
+  return t.replace(/\u0000/g,"").trim();
 }
 
-function addMsg(role,text){
+function extractCode(text){
+  // 1️⃣ tenta pegar bloco ``` ```
+  const block = text.match(/```([\s\S]*?)```/);
+  if(block) return block[1].trim();
+
+  // 2️⃣ fallback: tenta detectar código bruto
+  if(
+    text.includes("<!DOCTYPE") ||
+    text.includes("<html") ||
+    text.includes("<?php") ||
+    text.includes("function ") ||
+    text.includes("const ") ||
+    text.includes("import ")
+  ){
+    return text.trim();
+  }
+  return null;
+}
+
+function detectLang(code){
+  if(code.includes("<!DOCTYPE")||code.includes("<html")) return "HTML";
+  if(code.startsWith("<?php")) return "PHP";
+  if(code.includes("function ")||code.includes("const ")||code.includes("=>")) return "JS";
+  if(code.includes("{") && code.includes("}") && code.includes(":")) return "CSS";
+  return "TXT";
+}
+
+/* ================= DOWNLOAD LIMPO ================= */
+function downloadCode(rawText){
+  const code = extractCode(rawText);
+  if(!code){
+    alert("Nenhum código detectado para baixar.");
+    return;
+  }
+
+  const lang = detectLang(code);
+  let ext = ".txt";
+  if(lang==="HTML") ext=".html";
+  if(lang==="PHP") ext=".php";
+  if(lang==="JS") ext=".js";
+  if(lang==="CSS") ext=".css";
+
+  const blob = new Blob([code], {type:"text/plain"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="eg_webcode_projeto"+ext;
+  a.click();
+}
+
+/* ================= CHAT ================= */
+history.forEach(m=>addMsg(m.role,m.text,false));
+
+function addMsg(role,text,save=true){
   const d=document.createElement("div");
   d.className="msg "+role;
-  d.textContent=text;
+
+  const roleLabel=document.createElement("div");
+  roleLabel.className="role";
+  roleLabel.textContent=role==="user"?"Você":"EG WEBCODE AI";
+  d.appendChild(roleLabel);
+
+  const content=document.createElement("div");
+  content.className="msg-content";
+  content.style.whiteSpace="pre-wrap";
+  content.textContent=text;
+  d.appendChild(content);
+
+  // botão baixar SOMENTE código
+  if(role==="bot" && extractCode(text)){
+    const btn=document.createElement("button");
+    btn.className="msg-footer-btn";
+    btn.innerHTML="⬇ Baixar Código";
+    btn.onclick=()=>downloadCode(text);
+    d.appendChild(btn);
+  }
+
   chat.appendChild(d);
   chat.scrollTop=chat.scrollHeight;
+
+  if(save){
+    history.push({role,text});
+    localStorage.setItem("eg_history",JSON.stringify(history.slice(-20)));
+  }
 }
 
 async function send(custom){
-  if(busy)return;
+  if(busy) return;
   const text=custom||input.value.trim();
-  if(!text)return;
+  if(!text) return;
 
   input.value="";
   busy=true;
+  document.getElementById("sendBtn").disabled=true;
 
   addMsg("user",text);
-  history.push({role:"user",text});
-  localStorage.setItem("eg_history",JSON.stringify(history.slice(-10)));
 
-  const botDiv=document.createElement("div");
-  botDiv.className="msg bot";
-  chat.appendChild(botDiv);
+  const bot=document.createElement("div");
+  bot.className="msg bot";
+  bot.innerHTML='<div class="role">EG WEBCODE AI</div><div class="loading"><span></span><span></span><span></span></div>';
+  chat.appendChild(bot);
+  chat.scrollTop=chat.scrollHeight;
 
   let full="";
 
-  const res=await fetch(API_URL,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Accept":"text/event-stream",
-      "Authorization":"Bearer "+API_KEY
-    },
-    body:JSON.stringify({
-      messages: history.map(m=>({
-        role:m.role==="user"?"user":"assistant",
-        content:m.text
-      }))
-    })
-  });
-
-  const reader=res.body.getReader();
-  const dec=new TextDecoder();
-
-  while(true){
-    const {value,done}=await reader.read();
-    if(done)break;
-    const chunk=dec.decode(value,{stream:true});
-    chunk.split("\n").forEach(l=>{
-      if(!l.startsWith("data:"))return;
-      if(l.includes("[DONE]"))return;
-      try{
-        const j=JSON.parse(l.replace("data:",""));
-        const t=j.choices?.[0]?.delta?.content;
-        if(t){
-          full+=t;
-          botDiv.textContent=cleanText(full);
-          chat.scrollTop=chat.scrollHeight;
-        }
-      }catch{}
+  try{
+    const res=await fetch(API_URL,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"text/event-stream",
+        "Authorization":"Bearer "+API_KEY
+      },
+      body:JSON.stringify({
+        messages:history.map(m=>({
+          role:m.role==="user"?"user":"assistant",
+          content:m.text
+        }))
+      })
     });
+
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+
+    while(true){
+      const {value,done}=await reader.read();
+      if(done) break;
+      const chunk=dec.decode(value,{stream:true});
+
+      chunk.split("\n").forEach(l=>{
+        if(!l.startsWith("data:")) return;
+        if(l.includes("[DONE]")) return;
+
+        try{
+          const j=JSON.parse(l.replace("data:",""));
+          const t=j.choices?.[0]?.delta?.content;
+          if(t){
+            full+=t;
+            const box=bot.querySelector(".loading");
+            if(box){
+              box.remove();
+              const c=document.createElement("div");
+              c.className="msg-content";
+              c.style.whiteSpace="pre-wrap";
+              bot.appendChild(c);
+            }
+            bot.querySelector(".msg-content").textContent=full;
+            chat.scrollTop=chat.scrollHeight;
+          }
+        }catch{}
+      });
+    }
+
+    bot.remove();
+    addMsg("bot",cleanText(full),true);
+
+  }catch(e){
+    bot.remove();
+    addMsg("bot","Erro ao conectar com a API.",true);
   }
 
-  history.push({role:"bot",text:cleanText(full)});
-  localStorage.setItem("eg_history",JSON.stringify(history.slice(-10)));
   busy=false;
+  document.getElementById("sendBtn").disabled=false;
+}
+
+function clearChat(){
+  if(confirm("Limpar histórico?")){
+    localStorage.removeItem("eg_history");
+    history=[];
+    chat.innerHTML="";
+  }
 }
 
 fileInput.onchange=()=>{
   const f=fileInput.files[0];
-  if(!f)return;
+  if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{
-    send("Analise este arquivo:\n\n"+r.result);
-  };
+  r.onload=()=>send("Analise este arquivo:\n\n"+r.result);
   r.readAsText(f);
 };
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
 </script>
-<script>
-(function(){
-
-  /* ================= REMOVER SE JÁ EXISTIR ================= */
-  const oldDownload = document.getElementById("eg-download-btn");
-  if(oldDownload) oldDownload.remove();
-  const oldClear = document.getElementById("eg-clear-btn");
-  if(oldClear) oldClear.remove();
-
-  /* ================= BOTÃO BAIXAR ================= */
-  const downloadBtn = document.createElement("img");
-  downloadBtn.id = "eg-download-btn";
-  downloadBtn.src = "https://cdn-icons-png.flaticon.com/128/1091/1091007.png";
-  downloadBtn.style.position = "fixed";
-  downloadBtn.style.top = "10px";
-  downloadBtn.style.right = "10px";
-  downloadBtn.style.width = "38px";
-  downloadBtn.style.height = "38px";
-  downloadBtn.style.cursor = "pointer";
-  downloadBtn.style.zIndex = "999999";
-  document.body.appendChild(downloadBtn);
-
-  downloadBtn.onclick = function(){
-    const botMsgs = document.querySelectorAll(".message-row.bot, .msg.bot");
-    if(!botMsgs.length) return alert("Nenhuma mensagem do bot.");
-
-    const lastBot = botMsgs[botMsgs.length - 1];
-    let code = lastBot.innerText || lastBot.textContent;
-    code = code.trim();
-    if(!code) return alert("Código vazio.");
-
-    // Limpa lixo antes do código real
-    let start = 0;
-    if(code.includes("<!DOCTYPE")) start = code.indexOf("<!DOCTYPE");
-    else if(code.includes("<?php")) start = code.indexOf("<?php");
-    code = code.substring(start);
-
-    // Detecta extensão
-    let ext = ".txt";
-    if(code.includes("<html")) ext = ".html";
-    if(code.startsWith("<?php")) ext = ".php";
-
-    const blob = new Blob([code], { type: "text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "arquivo-gerado" + ext;
-    a.click();
-  };
-
-  /* ================= BOTÃO LIXEIRA ================= */
-  const clearBtn = document.createElement("img");
-  clearBtn.id = "eg-clear-btn";
-  clearBtn.src = "https://cdn-icons-png.flaticon.com/128/10337/10337388.png";
-  clearBtn.style.position = "fixed";
-  clearBtn.style.top = "10px";
-  clearBtn.style.right = "56px";
-  clearBtn.style.width = "38px";
-  clearBtn.style.height = "38px";
-  clearBtn.style.cursor = "pointer";
-  clearBtn.style.zIndex = "999999";
-  document.body.appendChild(clearBtn);
-
-  clearBtn.onclick = function(){
-    localStorage.clear();
-    alert("Tudo apagado! Conversas e mente resetadas.");
-    location.reload();
-    // recarregar automaticamente
-  };
-
-})();
-</script>
-
- <script>
-  javascript:(function(){
-  const KEY = "systemPrompt"; // chave da mente no localStorage
-
-  // Remove painel antigo se existir
-  const old = document.getElementById("eg-mind-panel");
-  if(old) old.remove();
-
-  // Overlay
-  const overlay = document.createElement("div");
-  overlay.id = "eg-mind-panel";
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.background = "rgba(0,0,0,0.7)";
-  overlay.style.zIndex = "999999";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-
-  // Caixa
-  const box = document.createElement("div");
-  box.style.width = "90%";
-  box.style.maxWidth = "600px";
-  box.style.background = "#111";
-  box.style.padding = "15px";
-  box.style.borderRadius = "10px";
-
-  // Textarea
-  const textarea = document.createElement("textarea");
-  textarea.style.width = "100%";
-  textarea.style.height = "260px";
-  textarea.style.background = "#000";
-  textarea.style.color = "#0f0";
-  textarea.style.fontSize = "14px";
-  textarea.style.padding = "10px";
-  textarea.value = localStorage.getItem(KEY) || "";
-
-  // Botões
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Salvar mente";
-  saveBtn.style.marginTop = "10px";
-  saveBtn.style.padding = "10px";
-  saveBtn.style.width = "100%";
-
-  const closeBtn = document.createElement("button");
-  closeBtn.textContent = "Cancelar";
-  closeBtn.style.marginTop = "6px";
-  closeBtn.style.padding = "10px";
-  closeBtn.style.width = "100%";
-
-  saveBtn.onclick = () => {
-    localStorage.setItem(KEY, textarea.value);
-    alert("Mente da IA salva!");
-    overlay.remove();
-  };
-
-  closeBtn.onclick = () => overlay.remove();
-
-  box.appendChild(textarea);
-  box.appendChild(saveBtn);
-  box.appendChild(closeBtn);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-})();
-              </script>
   
-  
-  </body>
+</body>
 </html>
