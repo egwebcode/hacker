@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-DORK | Advanced Dorking Tool</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gdark: {
+                            bg: '#121212',
+                            card: '#1e1e1e',
+                            border: '#333333',
+                            accent: '#4285f4', // Google Blue Darkened
+                            red: '#ea4335',
+                            green: '#34a853',
+                            yellow: '#fbbc05'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0f0f10;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #0f0f10 70%);
+            color: #e8eaed;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f0f10; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4285f4; }
+
+        /* Input Focus Glow */
+        .input-group:focus-within label {
+            color: #4285f4;
+        }
+        .input-group:focus-within i {
+            color: #4285f4;
+        }
+        
+        /* Glass Effect */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .logo-text span:nth-child(1) { color: #4285f4; }
+        .logo-text span:nth-child(2) { color: #ea4335; }
+        .logo-text span:nth-child(3) { color: #fbbc05; }
+        .logo-text span:nth-child(4) { color: #4285f4; }
+        .logo-text span:nth-child(5) { color: #34a853; }
+        .logo-text span:nth-child(6) { color: #ea4335; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <!-- HEADER / LOGO -->
+    <header class="text-center mb-10 animate-fade-in-down">
+        <h1 class="text-5xl md:text-6xl font-bold tracking-tighter logo-text mb-2">
+            <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span> <span class="text-white">Dork</span>
+        </h1>
+        <p class="text-gray-500 text-sm font-mono tracking-widest uppercase">Advanced Dorking Interface</p>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-4xl space-y-6">
+
+        <!-- MASTER SEARCH BAR (RESULTADO FINAL) -->
+        <div class="glass-panel rounded-2xl p-1 shadow-2xl shadow-blue-900/10 sticky top-4 z-50">
+            <div class="relative flex items-center">
+                <div class="absolute left-4 text-gdark-accent text-xl">
+                    <i class="fa-brands fa-google"></i>
+                </div>
+                <input type="text" id="finalQuery" 
+                    class="w-full bg-[#121212] text-white font-mono text-lg py-4 pl-12 pr-32 rounded-xl border border-transparent focus:border-gdark-accent focus:ring-2 focus:ring-blue-900/30 outline-none transition-all placeholder-gray-600"
+                    placeholder="Sua query aparecerá aqui..." readonly>
+                
+                <div class="absolute right-2 flex gap-2">
+                    <button onclick="copyQuery()" class="p-2 text-gray-400 hover:text-white transition-colors" title="Copiar">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                    <button onclick="googleSearch()" class="bg-gdark-accent hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-all shadow-lg shadow-blue-500/20">
+                        Pesquisar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DORK BUILDER FORM -->
+        <div class="glass-panel rounded-2xl p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-gray-400"></i> Construtor de Comandos
+                </h2>
+                <button onclick="clearAll()" class="text-xs text-red-400 hover:text-red-300 uppercase font-bold tracking-wider">
+                    Limpar Tudo
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- TERMO GERAL -->
+                <div class="md:col-span-2 input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">O que você procura?</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-general" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: Relatório Financeiro, Senhas, Database...">
+                    </div>
+                </div>
+
+                <!-- SITE (site:) -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Domínio Específico (site:)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-globe absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-site" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: gov.br, .edu, facebook.com">
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-1">Restringe a um site ou domínio.</p>
+                </div>
+
+                <!-- FILETYPE (filetype:) -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Arquivo (filetype:)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-file absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <select id="input-filetype" onchange="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors appearance-none cursor-pointer">
+                            <option value="">Qualquer formato</option>
+                            <option value="pdf">PDF (Documento Adobe)</option>
+                            <option value="docx">DOCX (Word)</option>
+                            <option value="xlsx">XLSX (Excel)</option>
+                            <option value="txt">TXT (Texto Puro)</option>
+                            <option value="csv">CSV (Dados)</option>
+                            <option value="sql">SQL (Database Dump)</option>
+                            <option value="log">LOG (Arquivos de Log)</option>
+                            <option value="xml">XML</option>
+                            <option value="json">JSON</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-gray-600 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- EXACT PHRASE ("") -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Frase Exata (" ")</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-quote-left absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-exact" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: Confidencial, Index of">
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-1">Busca a frase exatamente como escrita.</p>
+                </div>
+
+                <!-- EXCLUDE (-) -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 text-red-400">Excluir Termo (-)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-minus absolute left-3 top-3.5 text-red-900 transition-colors"></i>
+                        <input type="text" id="input-exclude" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-red-500 focus:outline-none transition-colors"
+                            placeholder="Ex: wikipedia, pinterest">
+                    </div>
+                    <p class="text-[10px] text-gray-600 mt-1">Remove resultados com esta palavra.</p>
+                </div>
+
+                <!-- INTITLE (intitle:) -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">No Título (intitle:)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-heading absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-intitle" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: index of, admin login">
+                    </div>
+                </div>
+
+                <!-- INURL (inurl:) -->
+                <div class="input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Na URL (inurl:)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-link absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-inurl" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: admin, wp-content, dashboard">
+                    </div>
+                </div>
+
+                <!-- INTEXT (intext:) -->
+                <div class="md:col-span-2 input-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">No Corpo do Texto (intext:)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-align-left absolute left-3 top-3.5 text-gray-600 transition-colors"></i>
+                        <input type="text" id="input-intext" oninput="buildQuery()" 
+                            class="w-full bg-[#18181b] border border-gray-800 rounded-lg py-3 pl-10 pr-4 text-gray-200 focus:border-gdark-accent focus:outline-none transition-colors"
+                            placeholder="Ex: password, cpf, confidential">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CHEAT SHEET -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500">
+            <div class="glass-panel p-4 rounded-xl">
+                <strong class="text-gdark-accent block mb-1">site:gov.br filetype:pdf</strong>
+                Busca PDFs apenas em sites do governo.
+            </div>
+            <div class="glass-panel p-4 rounded-xl">
+                <strong class="text-gdark-accent block mb-1">intitle:"index of"</strong>
+                Encontra diretórios de arquivos abertos.
+            </div>
+            <div class="glass-panel p-4 rounded-xl">
+                <strong class="text-gdark-accent block mb-1">inurl:admin -site:facebook.com</strong>
+                Busca URLs de admin, excluindo o Facebook.
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-10 text-gray-600 text-sm">
+        <p>&copy; 2025 G-DARK Project. Use com responsabilidade.</p>
+    </footer>
+
+    <script>
+        // Elementos
+        const finalQueryInput = document.getElementById('finalQuery');
+        
+        const inputs = {
+            general: document.getElementById('input-general'),
+            site: document.getElementById('input-site'),
+            filetype: document.getElementById('input-filetype'),
+            exact: document.getElementById('input-exact'),
+            exclude: document.getElementById('input-exclude'),
+            intitle: document.getElementById('input-intitle'),
+            inurl: document.getElementById('input-inurl'),
+            intext: document.getElementById('input-intext')
+        };
+
+        // Função Principal de Construção
+        function buildQuery() {
+            let parts = [];
+
+            // 1. Termo Geral (vai no início ou fim, mas geralmente início é melhor)
+            if (inputs.general.value.trim()) {
+                parts.push(inputs.general.value.trim());
+            }
+
+            // 2. Frase Exata
+            if (inputs.exact.value.trim()) {
+                parts.push(`"${inputs.exact.value.trim()}"`);
+            }
+
+            // 3. Operadores
+            if (inputs.site.value.trim()) {
+                parts.push(`site:${inputs.site.value.trim()}`);
+            }
+
+            if (inputs.filetype.value) {
+                parts.push(`filetype:${inputs.filetype.value}`);
+            }
+
+            if (inputs.intitle.value.trim()) {
+                // Se tiver espaço, coloca aspas automaticamente para segurança
+                let val = inputs.intitle.value.trim();
+                if(val.includes(' ')) val = `"${val}"`;
+                parts.push(`intitle:${val}`);
+            }
+
+            if (inputs.inurl.value.trim()) {
+                parts.push(`inurl:${inputs.inurl.value.trim()}`);
+            }
+
+            if (inputs.intext.value.trim()) {
+                let val = inputs.intext.value.trim();
+                if(val.includes(' ')) val = `"${val}"`;
+                parts.push(`intext:${val}`);
+            }
+
+            // 4. Exclusão
+            if (inputs.exclude.value.trim()) {
+                parts.push(`-${inputs.exclude.value.trim()}`);
+            }
+
+            // Atualiza o input final
+            finalQueryInput.value = parts.join(' ');
+        }
+
+        // Função de Pesquisa
+        function googleSearch() {
+            const query = finalQueryInput.value.trim();
+            if (!query) {
+                alert("Digite algo para pesquisar.");
+                return;
+            }
+            const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        }
+
+        // Copiar para Clipboard
+        function copyQuery() {
+            finalQueryInput.select();
+            navigator.clipboard.writeText(finalQueryInput.value);
+            
+            // Feedback visual simples
+            const btn = document.querySelector('button[onclick="copyQuery()"]');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>';
+            setTimeout(() => {
+                btn.innerHTML = originalIcon;
+            }, 1500);
+        }
+
+        // Limpar Tudo
+        function clearAll() {
+            Object.values(inputs).forEach(input => input.value = '');
+            finalQueryInput.value = '';
+        }
+
+        // Permitir Enter para pesquisar
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                googleSearch();
+            }
+        });
+    </script>
+</body>
+</html>
