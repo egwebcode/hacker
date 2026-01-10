@@ -71,7 +71,7 @@ async function consultarTudo(cpf){
 
   try{
     const resValidate = await fetch(
-      'https://corsproxy.io/?https://donald.bet.br/api/documents/validate',
+      'https://donald.bet.br/api/documents/validate',
       {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -81,7 +81,7 @@ async function consultarTudo(cpf){
     const dataValidate = await resValidate.json();
 
     const resAddress = await fetch(
-      'https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf',
+      'https://bateu.bet.br/api/bff/address-by-cpf',
       {
         method:'POST',
         headers:{'Content-Type':'application/json'},
