@@ -2,43 +2,36 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Consulta CPF em Lote</title>
+<title>Consultador CPF (Robusto)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{
   font-family: Arial, Helvetica, sans-serif;
-  background:#f2f2f2;
+  background:#f4f4f4;
   margin:0;
-  padding:30px;
+  padding:20px;
 }
 .container{
   background:#fff;
   max-width:1100px;
   margin:auto;
-  padding:25px;
+  padding:20px;
   border:1px solid #ccc;
 }
-h1{
-  margin:0 0 10px;
-  text-align:center;
-}
+h1{ margin:0 0 10px; text-align:center; }
 textarea{
   width:100%;
   padding:10px;
   font-family: Consolas, monospace;
   font-size:14px;
 }
-#lista{ height:180px; }
+#lista{ height:160px; }
 #saida, #logs{
   height:320px;
   overflow:auto;
   white-space:pre-wrap;
 }
-#saida{
-  background:#111;
-  color:#eee;
-}
+#saida{ background:#111; color:#eee; }
 #logs{
   background:#fafafa;
   border:1px solid #ccc;
@@ -46,7 +39,7 @@ textarea{
   font-size:13px;
 }
 button{
-  padding:10px 15px;
+  padding:10px 14px;
   margin:6px 4px 0 0;
   cursor:pointer;
 }
@@ -57,7 +50,7 @@ button{
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:15px;
+  gap:12px;
 }
 @media(max-width:900px){
   .grid{ grid-template-columns:1fr; }
@@ -67,34 +60,30 @@ button{
 <body>
 
 <div class="container">
-<h1>Consulta CPF em Lote</h1>
+  <h1>Consultador CPF (JSON Robusto)</h1>
 
-<label>Cole os CPFs (um por linha – aceita com ou sem caracteres)</label>
-<textarea id="lista" placeholder="000.790.814-72&#10;00179081453"></textarea>
-
-<div>
-  <button onclick="consultar()">Consultar</button>
-  <button onclick="copiar()">Copiar Resultado</button>
-  <button onclick="baixar()">Baixar TXT</button>
-  <button onclick="limpar()">Limpar</button>
-</div>
-
-<div class="status" id="status">
-  Total: 0 | Sucesso: 0 | Erro: 0
-</div>
-
-<div class="grid">
-  <div>
-    <h3>Resultado Final</h3>
-    <pre id="saida"></pre>
-  </div>
+  <label>Cole os CPFs (um por linha – com ou sem caracteres)</label>
+  <textarea id="lista" placeholder="000.790.814-72&#10;00179081453"></textarea>
 
   <div>
-    <h3>Logs</h3>
-    <pre id="logs"></pre>
+    <button onclick="consultar()">Consultar</button>
+    <button onclick="copiar()">Copiar Resultado</button>
+    <button onclick="baixar()">Baixar TXT</button>
+    <button onclick="limpar()">Limpar</button>
   </div>
-</div>
 
+  <div class="status" id="status">Total: 0 | Sucesso: 0 | Erro: 0</div>
+
+  <div class="grid">
+    <div>
+      <h3>Resultado Final</h3>
+      <pre id="saida"></pre>
+    </div>
+    <div>
+      <h3>Logs</h3>
+      <pre id="logs"></pre>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -105,91 +94,110 @@ const statusEl = document.getElementById('status');
 let total = 0, ok = 0, erro = 0;
 
 function log(msg){
-  const time = new Date().toLocaleTimeString();
-  logs.textContent += `[${time}] ${msg}\n`;
+  const t = new Date().toLocaleTimeString();
+  logs.textContent += `[${t}] ${msg}\n`;
   logs.scrollTop = logs.scrollHeight;
 }
-
 function atualizarStatus(){
   statusEl.textContent = `Total: ${total} | Sucesso: ${ok} | Erro: ${erro}`;
 }
 
+// Lê resposta como TEXTO e tenta converter para JSON
+async function fetchJsonSafe(url, options){
+  const res = await fetch(url, options);
+  const text = await res.text();
+  let json = null;
+  try{
+    json = JSON.parse(text);
+  }catch(e){
+    // não é JSON válido
+  }
+  return {
+    ok: res.ok,
+    status: res.status,
+    text,
+    json
+  };
+}
+
 async function consultar(){
-  const linhas = document.getElementById('lista').value
+  const cpfs = document.getElementById('lista').value
     .split('\n')
-    .map(l => l.replace(/\D/g, '')) // remove caracteres
+    .map(l => l.replace(/\D/g,'')) // remove caracteres
     .filter(l => l.length === 11);
 
-  if(linhas.length === 0){
-    alert('Nenhum CPF válido encontrado.');
+  if(cpfs.length === 0){
+    alert('Nenhum CPF válido (11 dígitos).');
     return;
   }
 
   // reset
   saida.textContent = '';
   logs.textContent = '';
-  total = linhas.length;
-  ok = 0;
-  erro = 0;
+  total = cpfs.length; ok = 0; erro = 0;
   atualizarStatus();
 
   log(`Iniciando consulta de ${total} CPFs`);
 
-  for(const cpf of linhas){
-    log(`Consultando CPF ${cpf}`);
+  for(const cpf of cpfs){
+    log(`CPF ${cpf}: iniciando`);
 
     try{
-      const req1 = fetch(
+      // API 1
+      const r1 = await fetchJsonSafe(
         'https://corsproxy.io/?https://donald.bet.br/api/documents/validate',
         {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ number: cpf, captcha_token:"" })
+          body: JSON.stringify({ number: cpf, captcha_token: "" })
         }
       );
 
-      const req2 = fetch(
+      if(!r1.json){
+        log(`CPF ${cpf}: API1 retornou NÃO-JSON (HTTP ${r1.status})`);
+      }
+
+      // API 2
+      const r2 = await fetchJsonSafe(
         'https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf',
         {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ cpf: cpf })
+          body: JSON.stringify({ cpf })
         }
       );
 
-      const [res1, res2] = await Promise.all([req1, req2]);
+      if(!r2.json){
+        log(`CPF ${cpf}: API2 retornou NÃO-JSON (HTTP ${r2.status})`);
+      }
 
-      const json1 = await res1.json();
-      const json2 = await res2.json();
-
-      const finalJson = {
-        validate: json1?.data || json1,
-        address: json2
+      const combinado = {
+        validate: r1.json?.data || r1.json || { error: 'Resposta não-JSON', status: r1.status },
+        address: r2.json || { error: 'Resposta não-JSON', status: r2.status }
       };
 
       saida.textContent +=
-        JSON.stringify(finalJson, null, 2) +
+        JSON.stringify(combinado, null, 2) +
         '\n--------------------------------------\n';
 
       ok++;
-      log(`CPF ${cpf} consultado com sucesso`);
+      log(`CPF ${cpf}: concluído`);
 
     }catch(e){
       erro++;
-      log(`ERRO no CPF ${cpf}: ${e}`);
+      log(`CPF ${cpf}: ERRO ${e}`);
     }
 
     atualizarStatus();
   }
 
-  log('Consulta finalizada');
+  log('Finalizado');
 }
 
 function copiar(){
   navigator.clipboard.writeText(saida.textContent);
-  alert('Resultado copiado!');
+  alert('Copiado!');
 }
-
 function baixar(){
   const blob = new Blob([saida.textContent], {type:'text/plain'});
   const a = document.createElement('a');
@@ -197,7 +205,6 @@ function baixar(){
   a.download = 'resultado_cpfs.txt';
   a.click();
 }
-
 function limpar(){
   document.getElementById('lista').value = '';
   saida.textContent = '';
