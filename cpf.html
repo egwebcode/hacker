@@ -1,118 +1,116 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Consulta CPF - JSON</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>CONSULTAR CPF & ENDEREÇO</title>
 
-<style>
-body{
-  font-family: system-ui, Arial;
-  background:#0b1220;
-  color:#fff;
-  margin:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box{
-  width:95%;
-  max-width:420px;
-  background:#111a2e;
-  padding:16px;
-  border-radius:10px;
-}
-input,button{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:0;
-  margin-top:8px;
-  font-size:15px;
-}
-button{
-  background:#0b76ff;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
-}
-pre{
-  margin-top:12px;
-  background:#000;
-  padding:10px;
-  border-radius:8px;
-  font-size:13px;
-  white-space:pre-wrap;
-  word-break:break-word;
-  max-height:300px;
-  overflow:auto;
-}
-</style>
+  <style>
+    body{
+      font-family:system-ui,Segoe UI,Roboto,Arial;
+      background:url("fundo.png") no-repeat center center fixed;
+      background-size:cover;
+      color:#111;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      margin:0;
+    }
+    .box{
+      background:#fff; /* ERRO CORRIGIDO */
+      padding:18px;
+      border-radius:10px;
+      box-shadow:0 8px 30px rgba(20,20,30,0.06);
+      width:420px;
+      max-height:90vh;
+      overflow:auto;
+    }
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:15px}
+    button{margin-top:10px;padding:10px 12px;border-radius:8px;border:0;background:#0b76ff;color:#fff;font-weight:700;cursor:pointer;width:100%}
+    button.secondary{background:#34c759;margin-top:5px}
+    pre{
+      background:#0b1220;
+      color:#e6eef8;
+      padding:10px;
+      border-radius:8px;
+      margin-top:12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      display:none;
+    }
+  </style>
 </head>
 
 <body>
 <div class="box">
-  <input id="cpf" placeholder="Digite o CPF (somente números)">
-  <button onclick="consultar()">Consultar</button>
-  <pre id="json">{}</pre>
+
+  <label style="font-size:13px;color:#666">CPF</label>
+  <input id="cpf" type="text"/>
+
+  <button id="consultBtn">Consultar Tudo</button>
+  <button id="showJsonBtn" class="secondary">Ver JSON</button>
+
+  <pre id="rawJson"></pre>
 </div>
 
 <script>
-async function consultar(){
-  const cpf = document.getElementById('cpf').value.trim();
-  const output = document.getElementById('json');
+const rawJson = document.getElementById('rawJson');
 
+async function consultarTudo(cpf){
   if(!cpf){
-    alert("Digite o CPF");
+    alert('Digite o CPF!');
     return;
   }
 
-  output.textContent = "Consultando...";
+  rawJson.style.display = 'block';
+  rawJson.textContent = 'Consultando...';
 
-  const payloadValidate = {
-    number: cpf,
-    captcha_token: ""
-  };
-
-  const payloadAddress = {
-    cpf: cpf
-  };
+  const payloadValidate = { number: String(cpf).trim(), captcha_token: "" };
+  const payloadAddress = { cpf: String(cpf).trim() };
 
   try{
-    const r1 = await fetch(
-      "https://corsproxy.io/?https://donald.bet.br/api/documents/validate",
+    const resValidate = await fetch(
+      'https://corsproxy.io/?https://donald.bet.br/api/documents/validate',
       {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payloadValidate)
       }
     );
-    const j1 = await r1.json();
+    const dataValidate = await resValidate.json();
 
-    const r2 = await fetch(
-      "https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf",
+    const resAddress = await fetch(
+      'https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf',
       {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(payloadAddress)
       }
     );
-    const j2 = await r2.json();
+    const dataAddress = await resAddress.json();
 
     const finalJson = {
-      validate: j1,
-      address: j2
+      validate: dataValidate,
+      address: dataAddress
     };
 
-    console.log("JSON FINAL:", finalJson);
-    output.textContent = JSON.stringify(finalJson, null, 2);
+    console.log(finalJson);
+    rawJson.textContent = JSON.stringify(finalJson, null, 2);
 
-  }catch(e){
-    console.error(e);
-    output.textContent = JSON.stringify({ error: String(e) }, null, 2);
+  }catch(err){
+    rawJson.textContent = JSON.stringify({ error:String(err) }, null, 2);
   }
 }
+
+document.getElementById('consultBtn').onclick = function(){
+  consultarTudo(document.getElementById('cpf').value);
+};
+
+document.getElementById('showJsonBtn').onclick = function(){
+  rawJson.style.display = rawJson.style.display === 'none' ? 'block' : 'none';
+};
 </script>
+
 </body>
 </html>
