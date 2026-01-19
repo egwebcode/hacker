@@ -2,215 +2,192 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Consultador CPF (Robusto)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta CPF ALL INFO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{
-  font-family: Arial, Helvetica, sans-serif;
-  background:#f4f4f4;
-  margin:0;
-  padding:20px;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* REMOVE qualquer scroll lateral */
 }
-.container{
-  background:#fff;
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
-  border:1px solid #ccc;
+
+* {
+  box-sizing: border-box;
 }
-h1{ margin:0 0 10px; text-align:center; }
-textarea{
-  width:100%;
-  padding:10px;
-  font-family: Consolas, monospace;
-  font-size:14px;
+
+body {
+  min-height: 100vh;
+  min-width: 100vw;
+
+  background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFGr8LY2sUjj_S-CBxpdjoEdwBC7lk-J5PkK-rHlQnWw&s=10");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: system-ui, Segoe UI, Arial;
+  color: #fff;
 }
-#lista{ height:160px; }
-#saida, #logs{
-  height:320px;
-  overflow:auto;
-  white-space:pre-wrap;
+.container {
+    max-width:750px;
+    margin:auto;
+    background:#151515;
+    padding:20px;
+    border-radius:8px;
 }
-#saida{ background:#111; color:#eee; }
-#logs{
-  background:#fafafa;
-  border:1px solid #ccc;
-  margin-top:10px;
-  font-size:13px;
+textarea, button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:5px;
+    font-size:15px;
 }
-button{
-  padding:10px 14px;
-  margin:6px 4px 0 0;
-  cursor:pointer;
+textarea {
+    background:#222;
+    color:#fff;
+    resize:vertical;
+    min-height:120px;
 }
-.status{
-  margin-top:10px;
-  font-size:14px;
+button {
+    font-weight:bold;
+    cursor:pointer;
 }
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+.run {
+    background:#00ff88;
+    color:#000;
 }
-@media(max-width:900px){
-  .grid{ grid-template-columns:1fr; }
+.copy {
+    background:#0066ff;
+    color:#fff;
+}
+.download {
+    background:#ff8800;
+    color:#000;
+}
+pre {
+    background:#000;
+    margin-top:15px;
+    padding:15px;
+    max-height:400px;
+    overflow:auto;
+    font-size:13px;
+    border-radius:5px;
+}
+.status {
+    margin-top:10px;
+    font-size:13px;
+    opacity:0.9;
 }
 </style>
 </head>
+
 <body>
 
 <div class="container">
-  <h1>Consultador CPF (JSON Robusto)</h1>
+    <h2>CONSULTAR MAIS INFORMAÇÕES DO CPFs</h2>
 
-  <label>Cole os CPFs (um por linha – com ou sem caracteres)</label>
-  <textarea id="lista" placeholder="000.790.814-72&#10;00179081453"></textarea>
+    <textarea id="cpfs" placeholder="Digite vários CPFs
+Ex:
+12582479411
+07068093868
+11122233344"></textarea>
 
-  <div>
-    <button onclick="consultar()">Consultar</button>
-    <button onclick="copiar()">Copiar Resultado</button>
-    <button onclick="baixar()">Baixar TXT</button>
-    <button onclick="limpar()">Limpar</button>
-  </div>
+    <button class="run" onclick="consultar()">CONSULTAR TODOS</button>
+    <button class="copy" onclick="copiarTudo()">COPIAR TUDO</button>
+    <button class="download" onclick="baixar()">BAIXAR JSON</button>
 
-  <div class="status" id="status">Total: 0 | Sucesso: 0 | Erro: 0</div>
-
-  <div class="grid">
-    <div>
-      <h3>Resultado Final</h3>
-      <pre id="saida"></pre>
-    </div>
-    <div>
-      <h3>Logs</h3>
-      <pre id="logs"></pre>
-    </div>
-  </div>
+    <div class="status" id="status"></div>
+    <pre id="resultado">[]</pre>
 </div>
 
 <script>
-const saida = document.getElementById('saida');
-const logs = document.getElementById('logs');
-const statusEl = document.getElementById('status');
+/*
+  Troque pelo CORS PROXY que você usa
+*/
+const CORS_PROXY = "https://corsproxy.io/?";
 
-let total = 0, ok = 0, erro = 0;
+const TOKEN = "eyJjbGllbnRJZCI6Ii91dGlscy9jaGVjay1jcGYvMTI1ODI0Nzk0MTEiLCJ0aW1lc3RhbXAiOjE3Njg3ODU5ODY4MjZ9.db890de410347371a516bb1568c0ec0645324004b04ba3f1aa13897c45141c13";
 
-function log(msg){
-  const t = new Date().toLocaleTimeString();
-  logs.textContent += `[${t}] ${msg}\n`;
-  logs.scrollTop = logs.scrollHeight;
-}
-function atualizarStatus(){
-  statusEl.textContent = `Total: ${total} | Sucesso: ${ok} | Erro: ${erro}`;
-}
+let respostas = [];
 
-// Lê resposta como TEXTO e tenta converter para JSON
-async function fetchJsonSafe(url, options){
-  const res = await fetch(url, options);
-  const text = await res.text();
-  let json = null;
-  try{
-    json = JSON.parse(text);
-  }catch(e){
-    // não é JSON válido
-  }
-  return {
-    ok: res.ok,
-    status: res.status,
-    text,
-    json
-  };
-}
+async function consultar() {
+    respostas = [];
+    document.getElementById('resultado').textContent = '[]';
 
-async function consultar(){
-  const cpfs = document.getElementById('lista').value
-    .split('\n')
-    .map(l => l.replace(/\D/g,'')) // remove caracteres
-    .filter(l => l.length === 11);
+    let lista = document.getElementById('cpfs').value
+        .replace(/[^\d\n, ]/g, '')
+        .split(/[\n, ]+/)
+        .filter(c => c.length === 11);
 
-  if(cpfs.length === 0){
-    alert('Nenhum CPF válido (11 dígitos).');
-    return;
-  }
-
-  // reset
-  saida.textContent = '';
-  logs.textContent = '';
-  total = cpfs.length; ok = 0; erro = 0;
-  atualizarStatus();
-
-  log(`Iniciando consulta de ${total} CPFs`);
-
-  for(const cpf of cpfs){
-    log(`CPF ${cpf}: iniciando`);
-
-    try{
-      // API 1
-      const r1 = await fetchJsonSafe(
-        'https://corsproxy.io/?https://donald.bet.br/api/documents/validate',
-        {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ number: cpf, captcha_token: "" })
-        }
-      );
-
-      if(!r1.json){
-        log(`CPF ${cpf}: API1 retornou NÃO-JSON (HTTP ${r1.status})`);
-      }
-
-      // API 2
-      const r2 = await fetchJsonSafe(
-        'https://corsproxy.io/?https://bateu.bet.br/api/bff/address-by-cpf',
-        {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ cpf })
-        }
-      );
-
-      if(!r2.json){
-        log(`CPF ${cpf}: API2 retornou NÃO-JSON (HTTP ${r2.status})`);
-      }
-
-      const combinado = {
-        validate: r1.json?.data || r1.json || { error: 'Resposta não-JSON', status: r1.status },
-        address: r2.json || { error: 'Resposta não-JSON', status: r2.status }
-      };
-
-      saida.textContent +=
-        JSON.stringify(combinado, null, 2) +
-        '\n--------------------------------------\n';
-
-      ok++;
-      log(`CPF ${cpf}: concluído`);
-
-    }catch(e){
-      erro++;
-      log(`CPF ${cpf}: ERRO ${e}`);
+    if (!lista.length) {
+        alert("Nenhum CPF válido encontrado");
+        return;
     }
 
-    atualizarStatus();
-  }
+    for (let i = 0; i < lista.length; i++) {
+        const cpf = lista[i];
+        document.getElementById('status').textContent =
+            `Consultando ${i + 1}/${lista.length} → ${cpf}`;
 
-  log('Finalizado');
+        const url = CORS_PROXY + encodeURIComponent(
+            `https://api.pagol.luckygaming.com.br/utils/check-cpf/${cpf}`
+        );
+
+        try {
+            const r = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'X-Client-Token': TOKEN,
+                    'isApp': 'false'
+                }
+            });
+
+            const t = await r.text();
+            let json;
+
+            try {
+                json = JSON.parse(t);
+            } catch {
+                json = { cpf, error: t };
+            }
+
+            respostas.push(json);
+        } catch (e) {
+            respostas.push({ cpf, error: e.toString() });
+        }
+
+        document.getElementById('resultado').textContent =
+            JSON.stringify(respostas, null, 2);
+    }
+
+    document.getElementById('status').textContent =
+        `Finalizado • ${respostas.length} CPFs`;
 }
 
-function copiar(){
-  navigator.clipboard.writeText(saida.textContent);
-  alert('Copiado!');
+function copiarTudo() {
+    navigator.clipboard.writeText(
+        JSON.stringify(respostas, null, 2)
+    );
+    alert("Tudo copiado");
 }
-function baixar(){
-  const blob = new Blob([saida.textContent], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'resultado_cpfs.txt';
-  a.click();
-}
-function limpar(){
-  document.getElementById('lista').value = '';
-  saida.textContent = '';
-  logs.textContent = '';
-  total = ok = erro = 0;
-  atualizarStatus();
+
+function baixar() {
+    const blob = new Blob(
+        [JSON.stringify(respostas, null, 2)],
+        { type: "application/json" }
+    );
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "consulta_cpfs.json";
+    a.click();
 }
 </script>
 
