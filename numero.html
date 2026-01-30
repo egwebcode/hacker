@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EG WebCode Localizador PRO</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 10px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .info-value a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .info-value a:hover {
+            text-decoration: underline;
+        }
+
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #667eea;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .operator-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .operator-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .country-flag {
+            width: 30px;
+            height: 20px;
+            object-fit: cover;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 12px;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .error {
+            background: #fee;
+            border-left: 4px solid #f44;
+            padding: 15px;
+            border-radius: 8px;
+            color: #c33;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .marker-popup {
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .marker-popup h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+        }
+
+        .marker-popup p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            #map {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 EG WebCode Localizador PRO</h1>
+            <p>Sistema de Consulta de Localização Avançado</p>
+        </div>
+
+        <div class="input-group">
+            <label for="numero">📲 Número de Telefone (com código do país)</label>
+            <input type="text" id="numero" placeholder="+558399123-4567" autocomplete="off">
+        </div>
+
+        <button class="btn" onclick="consultar()">🔎 Consultar Número</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Consultando dados...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="section">
+                <div class="section-title">📦 Informações do Número</div>
+                <img id="foto" class="photo-preview" style="display:none;" alt="Foto do perfil">
+                <div class="info-row">
+                    <span class="info-label">📱 Número UID:</span>
+                    <span class="info-value" id="numId"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👤 Nome:</span>
+                    <span class="info-value" id="nome"></span>
+                </div>
+            </div>
+
+            <div class="map-section">
+                <div class="section-title">🗺️ Mapa de Localização</div>
+                <div id="map"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📍 Detalhes da Localização</div>
+                <div class="info-row">
+                    <span class="info-label">🌍 País:</span>
+                    <span class="info-value" id="pais"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🗺️ Região:</span>
+                    <span class="info-value" id="regiao"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🏙️ Cidade:</span>
+                    <span class="info-value" id="cidade"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Latitude:</span>
+                    <span class="info-value" id="latitude"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Longitude:</span>
+                    <span class="info-value" id="longitude"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🔗 Google Maps:</span>
+                    <span class="info-value" id="googleMaps"></span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📡 Operadora</div>
+                <div class="info-row">
+                    <span class="info-label">🏢 Nome:</span>
+                    <span class="info-value operator-info" id="operadora"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📱 Nome Completo:</span>
+                    <span class="info-value" id="operadoraCompleto"></span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📊 Dados Volumétricos</div>
+                <div class="info-row">
+                    <span class="info-label">📦 Total:</span>
+                    <span class="info-value" id="total"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">✉️ Mensagens:</span>
+                    <span class="info-value" id="mensagens"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🖼️ Mídia:</span>
+                    <span class="info-value" id="midia"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👥 Contatos:</span>
+                    <span class="info-value" id="contatos"></span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn" onclick="baixarTXT()">💾 Baixar TXT</button>
+                <button class="action-btn" onclick="baixarJSON()">📄 Baixar JSON</button>
+                <button class="action-btn" onclick="novaConsulta()">🔄 Nova Consulta</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let dadosConsulta = null;
+        let mapa = null;
+        let marcador = null;
+
+        async function consultar() {
+            const numero = document.getElementById('numero').value.trim();
+            
+            if (!numero) {
+                mostrarErro('Por favor, insira um número de telefone.');
+                return;
+            }
+
+            if (!numero.startsWith('+')) {
+                mostrarErro('O número deve começar com + e o código do país (ex: +5583991672088)');
+                return;
+            }
+
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('loading').classList.add('active');
+            document.querySelector('.btn').disabled = true;
+
+            try {
+                const timestamp = Date.now();
+                const url = `https://corsproxy.io/?https://pt.mobile-location.com/emulator/check?driver=geo&country=BR&provider=phone&uid=${encodeURIComponent(numero)}&mode=undefined&_=${timestamp}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
+                        'Accept': '*/*',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro na consulta. Verifique o número e tente novamente.');
+                }
+
+                const data = await response.json();
+                dadosConsulta = data;
+                exibirResultados(data);
+
+            } catch (error) {
+                mostrarErro(error.message || 'Erro ao consultar o número. Tente novamente.');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.querySelector('.btn').disabled = false;
+            }
+        }
+
+        function exibirResultados(data) {
+            // Informações básicas
+            document.getElementById('numId').textContent = data.result?.uid || 'N/A';
+            const nome = `${data.result?.first_name || ''} ${data.result?.last_name || ''}`.trim();
+            document.getElementById('nome').textContent = nome || 'Não disponível';
+
+            // Foto
+            if (data.result?.photo?.path) {
+                const foto = document.getElementById('foto');
+                foto.src = data.result.photo.path;
+                foto.style.display = 'block';
+            }
+
+            // Localização
+            const pais = data.location?.country_fullname || 'N/A';
+            const bandeira = data.location?.country_flag || '';
+            document.getElementById('pais').innerHTML = bandeira ? 
+                `${pais} <img src="${bandeira}" class="country-flag" alt="Bandeira">` : pais;
+            
+            document.getElementById('regiao').textContent = data.location?.region || 'N/A';
+            document.getElementById('cidade').textContent = data.location?.city || 'Desconhecida';
+            
+            const lat = data.location?.geo_city?.latitude || null;
+            const lon = data.location?.geo_city?.longitude || null;
+            const latCurto = data.location?.geo_city?.short_latitude || 'N/A';
+            const lonCurto = data.location?.geo_city?.short_longitude || 'N/A';
+            
+            document.getElementById('latitude').textContent = lat ? `${lat} (${latCurto})` : 'N/A';
+            document.getElementById('longitude').textContent = lon ? `${lon} (${lonCurto})` : 'N/A';
+            
+            if (lat && lon) {
+                document.getElementById('googleMaps').innerHTML = 
+                    `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">Abrir no Google Maps 🗺️</a>`;
+                
+                // Criar/atualizar mapa
+                criarMapa(parseFloat(lat), parseFloat(lon), data);
+            } else {
+                document.getElementById('googleMaps').textContent = 'Coordenadas não disponíveis';
+            }
+
+            // Operadora
+            const operadora = data.location?.operator || 'N/A';
+            const iconeOp = data.location?.operator_icon || '';
+            document.getElementById('operadora').innerHTML = iconeOp ? 
+                `<img src="${iconeOp}" class="operator-icon" alt="Logo"> ${operadora}` : operadora;
+            
+            document.getElementById('operadoraCompleto').textContent = 
+                data.location?.operator_fullname || 'N/A';
+
+            // Dados volumétricos
+            document.getElementById('total').textContent = data.volumetric?.total || 'N/A';
+            document.getElementById('mensagens').textContent = data.volumetric?.size_message || 'N/A';
+            document.getElementById('midia').textContent = data.volumetric?.size_media || 'N/A';
+            document.getElementById('contatos').textContent = data.volumetric?.size_contacts || 'N/A';
+
+            document.getElementById('results').classList.add('active');
+        }
+
+        function criarMapa(lat, lon, data) {
+            // Se o mapa já existe, remove
+            if (mapa) {
+                mapa.remove();
+            }
+
+            // Cria novo mapa
+            const zoom = data.location?.geo_city?.zoom || 12;
+            mapa = L.map('map').setView([lat, lon], zoom);
+
+            // Adiciona camada de tiles (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(mapa);
+
+            // Ícone customizado para o marcador
+            const iconeCustomizado = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            // Adiciona marcador
+            const cidade = data.location?.city || 'Localização aproximada';
+            const regiao = data.location?.region || '';
+            const pais = data.location?.country_fullname || '';
+            const operadora = data.location?.operator || '';
+
+            marcador = L.marker([lat, lon], { icon: iconeCustomizado }).addTo(mapa);
+            
+            const popupContent = `
+                <div class="marker-popup">
+                    <h3>📍 ${cidade}</h3>
+                    <p><strong>Região:</strong> ${regiao}</p>
+                    <p><strong>País:</strong> ${pais}</p>
+                    <p><strong>Operadora:</strong> ${operadora}</p>
+                    <p><strong>Coordenadas:</strong><br>${lat}, ${lon}</p>
+                </div>
+            `;
+            
+            marcador.bindPopup(popupContent).openPopup();
+
+            // Adiciona círculo de precisão
+            L.circle([lat, lon], {
+                color: '#667eea',
+                fillColor: '#667eea',
+                fillOpacity: 0.2,
+                radius: 5000 // 5km de raio
+            }).addTo(mapa);
+        }
+
+        function mostrarErro(mensagem) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ ' + mensagem;
+            errorDiv.clasList.add('active');
+        }
+
+        function baixarTXT() {
+            if (!dadosConsulta) return;
+
+            const data = dadosConsulta;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const nome = `consulta_${timestamp}.txt`;
+
+            const conteudo = `
+╔═══════════════════════════════════════╗
+║   EG WEBCODE LOCALIZADOR PRO - LOG   ║
+╚═══════════════════════════════════════╝
+
+📦 INFORMAÇÕES DO NÚMERO:
+Número UID: ${data.result?.uid || 'N/A'}
+Nome: ${data.result?.first_name || ''} ${data.result?.last_name || ''}
+Foto: ${data.result?.photo?.path || 'N/A'}
+
+🗺️ LOCALIZAÇÃO:
+País: ${data.location?.country_fullname || 'N/A'}
+Região: ${data.location?.region || 'N/A'}
+Cidade: ${data.location?.city || 'Desconhecida'}
+Latitude: ${data.location?.geo_city?.latitude || 'N/A'} (${data.location?.geo_city?.short_latitude || ''})
+Longitude: ${data.location?.geo_city?.longitude || 'N/A'} (${data.location?.geo_city?.short_longitude || ''})
+Google Maps: https://www.google.com/maps?q=${data.location?.geo_city?.latitude},${data.location?.geo_city?.longitude}
+
+📡 OPERADORA:
+Operadora: ${data.location?.operator || 'N/A'}
+Nome Completo: ${data.location?.operator_fullname || 'N/A'}
+Ícone: ${data.location?.operator_icon || 'N/A'}
+
+📊 DADOS VOLUMÉTRICOS:
+Total: ${data.volumetric?.total || 'N/A'} (${data.volumetric?.total_original || 'N/A'} MB)
+Mensagens: ${data.volumetric?.size_message || 'N/A'} (${data.volumetric?.size_message_original || 'N/A'} MB)
+Mídia: ${data.volumetric?.size_media || 'N/A'} (${data.volumetric?.size_media_original || 'N/A'} MB)
+Contatos: ${data.volumetric?.size_contacts || 'N/A'} (${data.volumetric?.size_contacts_original || 'N/A'} MB)
+
+═══════════════════════════════════════
+Hash ID: ${data.hash_id || 'N/A'}
+API ID: ${data.api_id || 'N/A'}
+Consulta realizada em: ${new Date().toLocaleString('pt-BR')}
+            `.trim();
+
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nome;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function baixarJSON() {
+            if (!dadosConsulta) return;
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const nome = `consulta_${timestamp}.json`;
+
+            const blob = new Blob([JSON.stringify(dadosConsulta, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nome;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function novaConsulta() {
+            document.getElementById('numero').value = '';
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('foto').style.display = 'none';
+            dadosConsulta = null;
+            
+            if (mapa) {
+                mapa.remove();
+                mapa = null;
+            }
+        }
+
+        // Enter para consultar
+        document.getElementById('numero').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                consultar();
+            }
+        });
+    </script>
+</body>
+</html>
